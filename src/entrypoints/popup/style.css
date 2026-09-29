@@ -1,7 +1,12 @@
 @import '../../lib/ui/theme.css';
 
+/* Width lives on body, not :root — Firefox sizes the popup from the body
+   element and ignores a width set above it. Both browsers cap a popup at
+   800x600 and neither lets anybody resize one, so this number is the only
+   say we get. 440px leaves the notes field and the picture strip room to
+   breathe without turning the popup into a panel. */
 body {
-  width: 360px;
+  width: 440px;
   font-size: 0.8125rem;
 }
 
