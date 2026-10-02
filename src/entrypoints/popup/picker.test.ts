@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
-import { createTranslator } from '../../lib/i18n';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { activateLocale } from '../../lib/i18n';
 import { createPicker, type HeldPicture } from './picker';
 import type { Candidate } from '../../lib/page/candidates';
+
+// Nothing renders before a locale is active: the widgets read the shared
+// Lingui instance rather than taking a translator.
+beforeEach(() => activateLocale('en'));
 
 const CANDIDATES: Candidate[] = [
   { url: 'https://e.test/og.jpg', width: 0, height: 0, fromHead: true },
@@ -24,7 +28,6 @@ function mount(
     candidates,
     held,
     existing,
-    t: createTranslator('en'),
   });
   return { host, picker };
 }
@@ -207,7 +210,10 @@ describe('createPicker', () => {
     ]);
   });
 
-  it('labels its tiles in the language it was handed', () => {
+  it('labels its tiles in the language that is active', () => {
+    // The widget reads the active catalogue rather than taking a
+    // translator: Lingui's instance is the one everything shares.
+    activateLocale('sl');
     const host = document.createElement('div');
     createPicker(host, {
       candidates: [
@@ -215,8 +221,8 @@ describe('createPicker', () => {
       ],
       held: null,
       existing: false,
-      t: createTranslator('sl'),
     });
+    activateLocale('en');
 
     expect(host.querySelector('.tile.none')!.getAttribute('aria-label')).toBe(
       'Brez slike',
@@ -229,7 +235,6 @@ describe('createPicker', () => {
       candidates: [],
       held: { src: null },
       existing: true,
-      t: createTranslator('en'),
     });
 
     expect(host.querySelector('.tile.held')!.getAttribute('aria-label')).toBe(

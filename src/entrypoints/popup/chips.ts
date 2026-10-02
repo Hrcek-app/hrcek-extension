@@ -1,4 +1,4 @@
-import type { Translator } from '../../lib/i18n';
+import { i18n } from '@lingui/core';
 import { addTag, normalizeTag, removeTag, suggestionsFor } from '../../lib/tags';
 
 export interface ChipOptions {
@@ -6,7 +6,6 @@ export interface ChipOptions {
   /** Answers the labels beginning with `prefix`; may reject, and then offers none. */
   suggest(prefix: string): Promise<string[]>;
   onSubmit(): void;
-  t: Translator;
 }
 
 export interface ChipInput {
@@ -30,11 +29,9 @@ export function createChipInput(host: HTMLElement, options: ChipOptions): ChipIn
   /** Rising counter, so a slow answer cannot overwrite a newer one. */
   let generation = 0;
 
-  const { t } = options;
-
   host.className = 'chips-host';
   host.innerHTML = `
-    <div class="chips"><input class="chip-input" placeholder="${escapeAttribute(t('tags.add'))}" autocomplete="off" /></div>
+    <div class="chips"><input class="chip-input" placeholder="${escapeAttribute(i18n._('Add a tag'))}" autocomplete="off" /></div>
     <div class="suggestions" hidden></div>
   `;
   const box = host.querySelector<HTMLDivElement>('.chips')!;
@@ -50,7 +47,7 @@ export function createChipInput(host: HTMLElement, options: ChipOptions): ChipIn
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.textContent = '×';
-      remove.setAttribute('aria-label', t('tags.remove', { tag }));
+      remove.setAttribute('aria-label', i18n._('Remove {tag}', { tag }));
       remove.addEventListener('click', () => {
         tags = removeTag(tags, tag);
         renderChips();

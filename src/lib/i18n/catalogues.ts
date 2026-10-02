@@ -1,20 +1,21 @@
-import en from './messages/en.json';
-import sl from './messages/sl.json';
-
-/** Every key the extension can say. English is the one complete catalogue. */
-export type MessageKey = keyof typeof en;
-
-/** A translation may be partial; a missing key falls back to English. */
-export type Catalogue = Partial<Record<MessageKey, string>>;
+import type { Messages } from '@lingui/core';
+import { messages as en } from '../../locales/en.po';
+import { messages as sl } from '../../locales/sl.po';
 
 export const DEFAULT_LOCALE = 'en';
 
 /**
- * Adding a language is one JSON file and one line here. Nothing else in
- * the codebase learns about it — not even the server, which falls back
- * to English on its own for a language it does not carry.
+ * The compiled catalogues, keyed by locale. `@lingui/vite-plugin` turns
+ * each .po into this on import; nothing compiled is committed.
+ *
+ * Loaded statically rather than on demand, which a dynamic import would
+ * allow: the background is a classic script on both targets — MV3 declares
+ * no `type: module` and MV2 uses `scripts` — and a service worker cannot
+ * dynamic-import at all. Two small catalogues in every entry is the price,
+ * and it keeps rendering synchronous. Worth revisiting at the fifth
+ * language, not the second.
  */
-export const CATALOGUES: Record<string, Catalogue> = { en, sl };
+export const CATALOGUES: Record<string, Messages> = { en, sl };
 
 /**
  * What each language calls itself. The only naming that helps somebody

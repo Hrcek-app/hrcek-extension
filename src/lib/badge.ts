@@ -1,13 +1,20 @@
-import type { MessageKey } from './i18n/catalogues';
 import type { IconState } from './icon';
 import type { Answer } from './saved-state';
 import { isConfigured, type Settings } from './settings';
 
+/**
+ * Which tooltip, said as a name rather than as words. The decision below
+ * knows no language; the entrypoint turns one of these into a message.
+ * Deliberately not the message itself — messages are extracted from
+ * literals at their call sites, and a decision function is not a place
+ * where English belongs.
+ */
+export type BadgeTitle = 'name' | 'signInAgain';
+
 /** What the toolbar should show, and whether the server still needs asking. */
 export interface BadgePlan {
   icon: IconState;
-  /** Named, not rendered: this decision knows no language. */
-  title: MessageKey;
+  title: BadgeTitle;
   /** True when this address is worth a lookup; false when it is not. */
   ask: boolean;
 }
@@ -23,11 +30,11 @@ export function badgeForAnswer(answer: Answer): Omit<BadgePlan, 'ask'> {
   // nothing works until there is a new token. The tooltip says which of
   // the two it is.
   if (answer === 'unauthorized') {
-    return { icon: 'unconfigured', title: 'toolbar.signInAgain' };
+    return { icon: 'unconfigured', title: 'signInAgain' };
   }
   // 'unknown' keeps the plain hamster: "we could not ask" is not "you
   // have not saved it".
-  return { icon: answer === 'held' ? 'saved' : 'configured', title: 'toolbar.name' };
+  return { icon: answer === 'held' ? 'saved' : 'configured', title: 'name' };
 }
 
 /**
@@ -45,7 +52,7 @@ export function planBadge(input: {
 }): BadgePlan {
   const { settings, url, known } = input;
   if (!isConfigured(settings)) {
-    return { icon: 'unconfigured', title: 'toolbar.name', ask: false };
+    return { icon: 'unconfigured', title: 'name', ask: false };
   }
   // Shown whatever the indicator setting says. That setting governs
   // asking the server about pages you visit; it was never about hiding
@@ -53,9 +60,9 @@ export function planBadge(input: {
   // toast, this tick is the only confirmation a save has.
   if (known !== undefined) return { ...badgeForAnswer(known), ask: false };
   if (!settings.showSavedState || !isSaveable(url)) {
-    return { icon: 'configured', title: 'toolbar.name', ask: false };
+    return { icon: 'configured', title: 'name', ask: false };
   }
   // Colour until proven ticked. A failed lookup leaves it here: "we
   // could not ask" is not "you have not saved it".
-  return { icon: 'configured', title: 'toolbar.name', ask: true };
+  return { icon: 'configured', title: 'name', ask: true };
 }
