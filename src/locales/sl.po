@@ -5,16 +5,24 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: sl\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
-"n%100==4 ? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
+
+#: src/lib/i18n/lingui.test.ts
+msgid "{count, plural, one {# entry} other {# entries}}"
+msgstr "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}"
+
+#: src/entrypoints/options/main.ts
+#: src/lib/i18n/lingui.test.ts
+msgid "Server address"
+msgstr "Naslov strežnika"
+
+#: src/entrypoints/options/main.ts
+msgid "Automatic ({language})"
+msgstr "Samodejno ({language})"
 
 #: src/entrypoints/options/main.ts
 msgid "Settings"
 msgstr "Nastavitve"
-
-#: src/entrypoints/options/main.ts
-msgid "Server address"
-msgstr "Naslov strežnika"
 
 #: src/entrypoints/options/main.ts
 msgid "API token"
@@ -25,22 +33,12 @@ msgid "Language"
 msgstr "Jezik"
 
 #: src/entrypoints/options/main.ts
-msgid "Automatic ({language})"
-msgstr "Samodejno ({language})"
-
-#: src/entrypoints/options/main.ts
 msgid "Show whether a page is already saved"
 msgstr "Pokaži, ali je stran že shranjena"
 
 #: src/entrypoints/options/main.ts
-msgid ""
-"The toolbar ticks the hamster on pages you have saved. Doing so asks your "
-"Hrček about every address you visit. Turn it off and the toolbar only says "
-"whether the extension is configured."
-msgstr ""
-"Orodna vrstica označi hrčka na straneh, ki ste jih shranili. Za to vaš "
-"Hrček vpraša za vsak naslov, ki ga obiščete. Če to izklopite, orodna "
-"vrstica pove le, ali je razširitev nastavljena."
+msgid "The toolbar ticks the hamster on pages you have saved. Doing so asks your Hrček about every address you visit. Turn it off and the toolbar only says whether the extension is configured."
+msgstr "Orodna vrstica označi hrčka na straneh, ki ste jih shranili. Za to vaš Hrček vpraša za vsak naslov, ki ga obiščete. Če to izklopite, orodna vrstica pove le, ali je razširitev nastavljena."
 
 #: src/entrypoints/options/main.ts
 msgid "Paste one from "
@@ -67,12 +65,8 @@ msgid "Create a token with your password"
 msgstr "Ustvari žeton z geslom"
 
 #: src/entrypoints/options/main.ts
-msgid ""
-"Your password is used once to ask Hrček for a token, and is never stored. "
-"The token appears above and is what the extension uses from then on."
-msgstr ""
-"Vaše geslo se enkrat uporabi, da Hrčka prosi za žeton, in se nikoli ne "
-"shrani. Žeton se pokaže zgoraj in razširitev odslej uporablja samo njega."
+msgid "Your password is used once to ask Hrček for a token, and is never stored. The token appears above and is what the extension uses from then on."
+msgstr "Vaše geslo se enkrat uporabi, da Hrčka prosi za žeton, in se nikoli ne shrani. Žeton se pokaže zgoraj in razširitev odslej uporablja samo njega."
 
 #: src/entrypoints/options/main.ts
 msgid "Email or display name"
@@ -87,6 +81,22 @@ msgid "Create token"
 msgstr "Ustvari žeton"
 
 #: src/entrypoints/options/main.ts
+msgid "Too many attempts. Wait a while before trying again, or paste a token from your clients page."
+msgstr "Preveč poskusov. Počakajte nekaj časa in poskusite znova ali prilepite žeton s strani odjemalcev."
+
+#: src/entrypoints/options/main.ts
+msgid "This Hrček cannot make tokens for an extension. Create one on your clients page and paste it above."
+msgstr "Ta Hrček ne zna ustvariti žetonov za razširitev. Ustvarite ga na strani odjemalcev in ga prilepite zgoraj."
+
+#: src/entrypoints/options/main.ts
+msgid "Could not reach {server}."
+msgstr "Strežnika {server} ni bilo mogoče doseči."
+
+#: src/entrypoints/options/main.ts
+msgid "Something went wrong."
+msgstr "Nekaj je šlo narobe."
+
+#: src/entrypoints/options/main.ts
 msgid "Saving…"
 msgstr "Shranjujem…"
 
@@ -96,9 +106,7 @@ msgstr "Shranjeno."
 
 #: src/entrypoints/options/main.ts
 msgid "Saved. Site access was declined — press Save again to grant it."
-msgstr ""
-"Shranjeno. Dostop do strani je bil zavrnjen — znova pritisnite Shrani, da "
-"ga dovolite."
+msgstr "Shranjeno. Dostop do strani je bil zavrnjen — znova pritisnite Shrani, da ga dovolite."
 
 #: src/entrypoints/options/main.ts
 msgid "Asking Hrček for a token…"
@@ -119,30 +127,3 @@ msgstr "Preverjam…"
 #: src/entrypoints/options/main.ts
 msgid "Connected as {email}."
 msgstr "Povezani kot {email}."
-
-#: src/entrypoints/options/main.ts
-msgid ""
-"Too many attempts. Wait a while before trying again, or paste a token from "
-"your clients page."
-msgstr ""
-"Preveč poskusov. Počakajte nekaj časa in poskusite znova ali prilepite "
-"žeton s strani odjemalcev."
-
-#: src/entrypoints/options/main.ts
-msgid ""
-"This Hrček cannot make tokens for an extension. Create one on your clients "
-"page and paste it above."
-msgstr ""
-"Ta Hrček ne zna ustvariti žetonov za razširitev. Ustvarite ga na strani "
-"odjemalcev in ga prilepite zgoraj."
-
-#: src/entrypoints/options/main.ts
-msgid "Something went wrong."
-msgstr "Nekaj je šlo narobe."
-
-#. Four forms where English has two. This is what our own catalogue cannot
-#. express: 1 vnos, 2 vnosa, 3 vnosi, 5 vnosov.
-#: src/lib/i18n/lingui.test.ts
-msgid "{count, plural, one {# entry} other {# entries}}"
-msgstr ""
-"{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}"
