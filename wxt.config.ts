@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import { lingui } from '@lingui/vite-plugin';
 
 // The colour icon set for the toolbar button, keyed by the manifest field
 // the hook below writes it into (`action` on MV3, `browser_action` on
@@ -12,6 +13,11 @@ const defaultIcon = {
 
 export default defineConfig({
   srcDir: 'src',
+  // PROTOTYPE: compiles src/locales/*.po on import, so the .po files are
+  // the only catalogue in the tree and nothing compiled is committed.
+  // This is the whole build-side cost of Lingui without macros — one
+  // plugin, no Babel, no change to how anything else is bundled.
+  vite: () => ({ plugins: [lingui()] }),
   // WXT's publicDir default is `<root>/public`, unaffected by srcDir — it
   // must be set explicitly so `src/public` (icons, static assets) is
   // copied into the build.
