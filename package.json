@@ -24,6 +24,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lingui/cli": "^6.8.0",
+    "@lingui/format-po": "^6.8.0",
+    "@lingui/vite-plugin": "^6.8.0",
     "@playwright/test": "^1.63.0",
     "eslint": "^10.10.0",
     "jsdom": "^30.0.1",
@@ -36,5 +39,8 @@
     "vitest": "^5.0.1",
     "web-ext": "^10.6.0",
     "wxt": "^0.21.4"
+  },
+  "dependencies": {
+    "@lingui/core": "^6.8.0"
   }
 }

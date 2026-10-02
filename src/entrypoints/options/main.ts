@@ -1,12 +1,8 @@
 import { browser } from 'wxt/browser';
 import { HrcekApiError, HrcekNetworkError } from '../../lib/api/errors';
 import { anonymousClient, clientFromSettings } from '../../lib/client-factory';
-import {
-  availableLocales,
-  createTranslator,
-  localeFor,
-  type Translator,
-} from '../../lib/i18n';
+import { i18n } from '@lingui/core';
+import { availableLocales, localeFor } from '../../lib/i18n';
 import { LOCALE_NAMES } from '../../lib/i18n/catalogues';
 import { loadSettings, normalizeServerUrl, saveSettings } from '../../lib/settings';
 import { tokenName } from '../../lib/token-name';
@@ -16,7 +12,26 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 
 /** The stored choice: null is Automatic. */
 let chosenLanguage: string | null = null;
-let t: Translator = createTranslator(localeFor(null));
+
+/**
+ * Lingui's non-macro form, aliased to keep call sites one short word. The
+ * id is the English text, so a call site reads as what it says — and a
+ * message with no translation falls back to its own id, which is already
+ * the English.
+ */
+function t(id: string, values?: Record<string, unknown>): string {
+  return i18n._(id, values);
+}
+
+/**
+ * Catalogues are .po and compiled on import by @lingui/vite-plugin, so
+ * loading one is a dynamic import. The extension holds two small
+ * languages, but this is where a tenth would cost nothing at install.
+ */
+async function activate(locale: string): Promise<void> {
+  const { messages } = await import(`../../locales/${locale}.po`);
+  i18n.loadAndActivate({ locale, messages });
+}
 
 let serverUrlInput: HTMLInputElement;
 let tokenInput: HTMLInputElement;
@@ -44,7 +59,7 @@ function languageOptions(): string {
   // its own words — the only naming that helps somebody who has landed
   // in a language they cannot read.
   const resolved = localeFor(null);
-  const automatic = t('options.languageAutomatic', {
+  const automatic = t('Automatic ({language})', {
     language: LOCALE_NAMES[resolved] ?? resolved,
   });
   const rows = [`<option value="">${escapeText(automatic)}</option>`];
@@ -63,42 +78,42 @@ function render(): void {
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
-    <h1>${escapeText(t('options.heading'))}</h1>
+    <h1>${escapeText(t('Settings'))}</h1>
     <form id="settings-form">
       <div class="field">
-        <label for="server-url">${escapeText(t('options.serverUrl'))}</label>
+        <label for="server-url">${escapeText(t('Server address'))}</label>
         <input id="server-url" type="url" placeholder="https://hrcek.example.com" required />
       </div>
       <div class="field">
-        <label for="token">${escapeText(t('options.token'))}</label>
+        <label for="token">${escapeText(t('API token'))}</label>
         <input id="token" type="password" placeholder="hrcek_…" autocomplete="off" />
       </div>
       <div class="field">
-        <label for="language">${escapeText(t('options.language'))}</label>
+        <label for="language">${escapeText(t('Language'))}</label>
         <select id="language">${languageOptions()}</select>
       </div>
       <div class="field">
-        <label for="show-saved"><input type="checkbox" id="show-saved" /> ${escapeText(t('options.showSaved'))}</label>
-        <p>${escapeText(t('options.showSavedHelp'))}</p>
+        <label for="show-saved"><input type="checkbox" id="show-saved" /> ${escapeText(t('Show whether a page is already saved'))}</label>
+        <p>${escapeText(t('The toolbar ticks the hamster on pages you have saved. Doing so asks your Hrček about every address you visit. Turn it off and the toolbar only says whether the extension is configured.'))}</p>
       </div>
-      <p>${escapeText(t('options.pasteBefore'))}<a id="account-link" href="#" target="_blank">${escapeText(t('options.clientsPage'))}</a>${escapeText(t('options.pasteAfter'))}</p>
-      <button type="submit" id="save">${escapeText(t('options.save'))}</button>
-      <button type="button" class="quiet" id="test">${escapeText(t('options.test'))}</button>
+      <p>${escapeText(t('Paste one from '))}<a id="account-link" href="#" target="_blank">${escapeText(t('your clients page'))}</a>${escapeText(t(', or let Hrček make one below.'))}</p>
+      <button type="submit" id="save">${escapeText(t('Save'))}</button>
+      <button type="button" class="quiet" id="test">${escapeText(t('Test connection'))}</button>
       <p id="status" data-kind="info"></p>
     </form>
 
     <details id="create-token" open>
-      <summary>${escapeText(t('options.createSummary'))}</summary>
-      <p>${escapeText(t('options.createHelp'))}</p>
+      <summary>${escapeText(t('Create a token with your password'))}</summary>
+      <p>${escapeText(t('Your password is used once to ask Hrček for a token, and is never stored. The token appears above and is what the extension uses from then on.'))}</p>
       <div class="field">
-        <label for="identifier">${escapeText(t('options.identifier'))}</label>
+        <label for="identifier">${escapeText(t('Email or display name'))}</label>
         <input id="identifier" autocomplete="username" />
       </div>
       <div class="field">
-        <label for="password">${escapeText(t('options.password'))}</label>
+        <label for="password">${escapeText(t('Password'))}</label>
         <input id="password" type="password" autocomplete="current-password" />
       </div>
-      <button type="button" id="create">${escapeText(t('options.create'))}</button>
+      <button type="button" id="create">${escapeText(t('Create token'))}</button>
     </details>
   `;
   wire();
@@ -144,7 +159,6 @@ function wire(): void {
     .addEventListener('change', (event) => {
       const value = (event.target as HTMLSelectElement).value;
       chosenLanguage = value === '' ? null : value;
-      t = createTranslator(localeFor(chosenLanguage));
       // Keep what is typed but not yet saved: rebuilding the markup
       // would otherwise throw away a half-entered token. The password is
       // deliberately left out — it must never survive longer than the
@@ -155,16 +169,18 @@ function wire(): void {
         identifier: identifierInput.value,
         showSaved: showSavedInput.checked,
       };
-      render();
-      serverUrlInput.value = kept.serverUrl;
-      tokenInput.value = kept.token;
-      identifierInput.value = kept.identifier;
-      showSavedInput.checked = kept.showSaved;
-      // Restoring serverUrlInput.value above is a property assignment,
-      // which fires no `change` event — the href would otherwise go
-      // stale until the field is touched again or the page reloads.
-      refreshAccountLink();
-      void persistLanguage();
+      // Activating a catalogue is async now — it is a dynamic import — so
+      // the re-render has to wait for it. With the hand-rolled catalogue
+      // this was a synchronous assignment.
+      void activate(localeFor(chosenLanguage)).then(() => {
+        render();
+        serverUrlInput.value = kept.serverUrl;
+        tokenInput.value = kept.token;
+        identifierInput.value = kept.identifier;
+        showSavedInput.checked = kept.showSaved;
+        refreshAccountLink();
+        void persistLanguage();
+      });
     });
 }
 
@@ -190,19 +206,25 @@ function messageFor(error: unknown): string {
   if (error instanceof HrcekApiError) {
     // Rate-limited, ten an hour by default. The throttle's reply is not
     // the Hrček error envelope, so the status is all there is to go on.
-    if (error.status === 429) return t('options.tooManyAttempts');
+    if (error.status === 429)
+      return t(
+        'Too many attempts. Wait a while before trying again, or paste a token from your clients page.',
+      );
     // An older Hrček has no exchange route; its 404 says nothing useful.
-    if (error.status === 404) return t('options.cannotMint');
+    if (error.status === 404)
+      return t(
+        'This Hrček cannot make tokens for an extension. Create one on your clients page and paste it above.',
+      );
     return error.message;
   }
   // Written by the client, in English. Say it in the chosen language,
   // naming the address that was actually tried.
   if (error instanceof HrcekNetworkError) {
-    return t('error.unreachable', {
+    return t('Could not reach {server}.', {
       server: normalizeServerUrl(serverUrlInput.value),
     });
   }
-  return t('error.somethingWrong');
+  return t('Something went wrong.');
 }
 
 /** The manifest holds no host permissions; ask for this server's origin. */
@@ -217,7 +239,7 @@ async function requestOriginPermission(serverUrl: string): Promise<boolean> {
 }
 
 async function save(): Promise<void> {
-  setStatus('info', t('options.saving'));
+  setStatus('info', t('Saving…'));
   try {
     const serverUrl = normalizeServerUrl(serverUrlInput.value);
     const granted = await requestOriginPermission(serverUrl);
@@ -228,7 +250,12 @@ async function save(): Promise<void> {
       showSavedState: showSavedInput.checked,
       language: chosenLanguage,
     });
-    setStatus('success', granted ? t('options.saved') : t('options.savedNoAccess'));
+    setStatus(
+      'success',
+      granted
+        ? t('Saved.')
+        : t('Saved. Site access was declined — press Save again to grant it.'),
+    );
   } catch (error) {
     setStatus('error', messageFor(error));
   }
@@ -245,7 +272,7 @@ async function nameForThisClient(): Promise<string> {
 }
 
 async function createToken(): Promise<void> {
-  setStatus('info', t('options.asking'));
+  setStatus('info', t('Asking Hrček for a token…'));
   try {
     const serverUrl = normalizeServerUrl(serverUrlInput.value);
     await requestOriginPermission(serverUrl);
@@ -266,7 +293,7 @@ async function createToken(): Promise<void> {
       showSavedState: showSavedInput.checked,
       language: chosenLanguage,
     });
-    setStatus('success', t('options.tokenCreated', { name: created.name }));
+    setStatus('success', t('Saved. Token created as "{name}".', { name: created.name }));
   } catch (error) {
     setStatus('error', messageFor(error));
   }
@@ -275,13 +302,13 @@ async function createToken(): Promise<void> {
 async function testConnection(): Promise<void> {
   const settings = await loadSettings();
   if (settings === null || settings.token === null) {
-    setStatus('error', t('options.needServerAndToken'));
+    setStatus('error', t('Save a server address and token first.'));
     return;
   }
-  setStatus('info', t('options.testing'));
+  setStatus('info', t('Testing…'));
   try {
     const user = await clientFromSettings(settings, localeFor(chosenLanguage)).me();
-    setStatus('success', t('options.connectedAs', { email: user.email }));
+    setStatus('success', t('Connected as {email}.', { email: user.email }));
   } catch (error) {
     setStatus('error', messageFor(error));
   }
@@ -298,9 +325,11 @@ async function restore(): Promise<void> {
   });
   if (settings !== null) {
     chosenLanguage = settings.language;
-    t = createTranslator(localeFor(chosenLanguage));
     tokenAlreadyHeld = settings.token !== null;
   }
+  // Nothing can render before a catalogue is active — with the hand-rolled
+  // catalogue the translator was ready at module scope, synchronously.
+  await activate(localeFor(chosenLanguage));
   render();
   if (settings === null) return;
   serverUrlInput.value = settings.serverUrl;

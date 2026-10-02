@@ -1,0 +1,139 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-10-02\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. The source locale: msgstr is empty on purpose. Lingui falls back to the
+#. id, and the id is the English text, so English needs no translation.
+#: src/entrypoints/options/main.ts
+msgid "Settings"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Server address"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "API token"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Language"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Automatic ({language})"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Show whether a page is already saved"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid ""
+"The toolbar ticks the hamster on pages you have saved. Doing so asks your "
+"Hrček about every address you visit. Turn it off and the toolbar only says "
+"whether the extension is configured."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Paste one from "
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "your clients page"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid ", or let Hrček make one below."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Save"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Test connection"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Create a token with your password"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid ""
+"Your password is used once to ask Hrček for a token, and is never stored. "
+"The token appears above and is what the extension uses from then on."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Email or display name"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Password"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Create token"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Saving…"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Saved."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Saved. Site access was declined — press Save again to grant it."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Asking Hrček for a token…"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Saved. Token created as \"{name}\"."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Save a server address and token first."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Testing…"
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Connected as {email}."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid ""
+"Too many attempts. Wait a while before trying again, or paste a token from "
+"your clients page."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid ""
+"This Hrček cannot make tokens for an extension. Create one on your clients "
+"page and paste it above."
+msgstr ""
+
+#: src/entrypoints/options/main.ts
+msgid "Something went wrong."
+msgstr ""
+
+#. Not used by the UI yet. Here because plural forms are the thing our own
+#. catalogue cannot express at all, and the reason to consider a real i18n
+#. library — see the Slovenian file, which needs four forms where English
+#. needs two.
+#: src/lib/i18n/lingui.test.ts
+msgid "{count, plural, one {# entry} other {# entries}}"
+msgstr ""
