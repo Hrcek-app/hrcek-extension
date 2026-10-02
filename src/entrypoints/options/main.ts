@@ -14,16 +14,6 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 let chosenLanguage: string | null = null;
 
 /**
- * Lingui's non-macro form, aliased to keep call sites one short word. The
- * id is the English text, so a call site reads as what it says — and a
- * message with no translation falls back to its own id, which is already
- * the English.
- */
-function t(id: string, values?: Record<string, unknown>): string {
-  return i18n._(id, values);
-}
-
-/**
  * Catalogues are .po and compiled on import by @lingui/vite-plugin, so
  * loading one is a dynamic import. The extension holds two small
  * languages, but this is where a tenth would cost nothing at install.
@@ -59,7 +49,7 @@ function languageOptions(): string {
   // its own words — the only naming that helps somebody who has landed
   // in a language they cannot read.
   const resolved = localeFor(null);
-  const automatic = t('Automatic ({language})', {
+  const automatic = i18n._('Automatic ({language})', {
     language: LOCALE_NAMES[resolved] ?? resolved,
   });
   const rows = [`<option value="">${escapeText(automatic)}</option>`];
@@ -78,42 +68,42 @@ function render(): void {
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
-    <h1>${escapeText(t('Settings'))}</h1>
+    <h1>${escapeText(i18n._('Settings'))}</h1>
     <form id="settings-form">
       <div class="field">
-        <label for="server-url">${escapeText(t('Server address'))}</label>
+        <label for="server-url">${escapeText(i18n._('Server address'))}</label>
         <input id="server-url" type="url" placeholder="https://hrcek.example.com" required />
       </div>
       <div class="field">
-        <label for="token">${escapeText(t('API token'))}</label>
+        <label for="token">${escapeText(i18n._('API token'))}</label>
         <input id="token" type="password" placeholder="hrcek_…" autocomplete="off" />
       </div>
       <div class="field">
-        <label for="language">${escapeText(t('Language'))}</label>
+        <label for="language">${escapeText(i18n._('Language'))}</label>
         <select id="language">${languageOptions()}</select>
       </div>
       <div class="field">
-        <label for="show-saved"><input type="checkbox" id="show-saved" /> ${escapeText(t('Show whether a page is already saved'))}</label>
-        <p>${escapeText(t('The toolbar ticks the hamster on pages you have saved. Doing so asks your Hrček about every address you visit. Turn it off and the toolbar only says whether the extension is configured.'))}</p>
+        <label for="show-saved"><input type="checkbox" id="show-saved" /> ${escapeText(i18n._('Show whether a page is already saved'))}</label>
+        <p>${escapeText(i18n._('The toolbar ticks the hamster on pages you have saved. Doing so asks your Hrček about every address you visit. Turn it off and the toolbar only says whether the extension is configured.'))}</p>
       </div>
-      <p>${escapeText(t('Paste one from '))}<a id="account-link" href="#" target="_blank">${escapeText(t('your clients page'))}</a>${escapeText(t(', or let Hrček make one below.'))}</p>
-      <button type="submit" id="save">${escapeText(t('Save'))}</button>
-      <button type="button" class="quiet" id="test">${escapeText(t('Test connection'))}</button>
+      <p>${escapeText(i18n._('Paste one from '))}<a id="account-link" href="#" target="_blank">${escapeText(i18n._('your clients page'))}</a>${escapeText(i18n._(', or let Hrček make one below.'))}</p>
+      <button type="submit" id="save">${escapeText(i18n._('Save'))}</button>
+      <button type="button" class="quiet" id="test">${escapeText(i18n._('Test connection'))}</button>
       <p id="status" data-kind="info"></p>
     </form>
 
     <details id="create-token" open>
-      <summary>${escapeText(t('Create a token with your password'))}</summary>
-      <p>${escapeText(t('Your password is used once to ask Hrček for a token, and is never stored. The token appears above and is what the extension uses from then on.'))}</p>
+      <summary>${escapeText(i18n._('Create a token with your password'))}</summary>
+      <p>${escapeText(i18n._('Your password is used once to ask Hrček for a token, and is never stored. The token appears above and is what the extension uses from then on.'))}</p>
       <div class="field">
-        <label for="identifier">${escapeText(t('Email or display name'))}</label>
+        <label for="identifier">${escapeText(i18n._('Email or display name'))}</label>
         <input id="identifier" autocomplete="username" />
       </div>
       <div class="field">
-        <label for="password">${escapeText(t('Password'))}</label>
+        <label for="password">${escapeText(i18n._('Password'))}</label>
         <input id="password" type="password" autocomplete="current-password" />
       </div>
-      <button type="button" id="create">${escapeText(t('Create token'))}</button>
+      <button type="button" id="create">${escapeText(i18n._('Create token'))}</button>
     </details>
   `;
   wire();
@@ -207,12 +197,12 @@ function messageFor(error: unknown): string {
     // Rate-limited, ten an hour by default. The throttle's reply is not
     // the Hrček error envelope, so the status is all there is to go on.
     if (error.status === 429)
-      return t(
+      return i18n._(
         'Too many attempts. Wait a while before trying again, or paste a token from your clients page.',
       );
     // An older Hrček has no exchange route; its 404 says nothing useful.
     if (error.status === 404)
-      return t(
+      return i18n._(
         'This Hrček cannot make tokens for an extension. Create one on your clients page and paste it above.',
       );
     return error.message;
@@ -220,11 +210,11 @@ function messageFor(error: unknown): string {
   // Written by the client, in English. Say it in the chosen language,
   // naming the address that was actually tried.
   if (error instanceof HrcekNetworkError) {
-    return t('Could not reach {server}.', {
+    return i18n._('Could not reach {server}.', {
       server: normalizeServerUrl(serverUrlInput.value),
     });
   }
-  return t('Something went wrong.');
+  return i18n._('Something went wrong.');
 }
 
 /** The manifest holds no host permissions; ask for this server's origin. */
@@ -239,7 +229,7 @@ async function requestOriginPermission(serverUrl: string): Promise<boolean> {
 }
 
 async function save(): Promise<void> {
-  setStatus('info', t('Saving…'));
+  setStatus('info', i18n._('Saving…'));
   try {
     const serverUrl = normalizeServerUrl(serverUrlInput.value);
     const granted = await requestOriginPermission(serverUrl);
@@ -253,8 +243,8 @@ async function save(): Promise<void> {
     setStatus(
       'success',
       granted
-        ? t('Saved.')
-        : t('Saved. Site access was declined — press Save again to grant it.'),
+        ? i18n._('Saved.')
+        : i18n._('Saved. Site access was declined — press Save again to grant it.'),
     );
   } catch (error) {
     setStatus('error', messageFor(error));
@@ -272,7 +262,7 @@ async function nameForThisClient(): Promise<string> {
 }
 
 async function createToken(): Promise<void> {
-  setStatus('info', t('Asking Hrček for a token…'));
+  setStatus('info', i18n._('Asking Hrček for a token…'));
   try {
     const serverUrl = normalizeServerUrl(serverUrlInput.value);
     await requestOriginPermission(serverUrl);
@@ -293,7 +283,10 @@ async function createToken(): Promise<void> {
       showSavedState: showSavedInput.checked,
       language: chosenLanguage,
     });
-    setStatus('success', t('Saved. Token created as "{name}".', { name: created.name }));
+    setStatus(
+      'success',
+      i18n._('Saved. Token created as "{name}".', { name: created.name }),
+    );
   } catch (error) {
     setStatus('error', messageFor(error));
   }
@@ -302,13 +295,13 @@ async function createToken(): Promise<void> {
 async function testConnection(): Promise<void> {
   const settings = await loadSettings();
   if (settings === null || settings.token === null) {
-    setStatus('error', t('Save a server address and token first.'));
+    setStatus('error', i18n._('Save a server address and token first.'));
     return;
   }
-  setStatus('info', t('Testing…'));
+  setStatus('info', i18n._('Testing…'));
   try {
     const user = await clientFromSettings(settings, localeFor(chosenLanguage)).me();
-    setStatus('success', t('Connected as {email}.', { email: user.email }));
+    setStatus('success', i18n._('Connected as {email}.', { email: user.email }));
   } catch (error) {
     setStatus('error', messageFor(error));
   }

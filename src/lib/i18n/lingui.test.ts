@@ -21,24 +21,30 @@ function slovenian() {
   return i18n;
 }
 
-const ENTRIES = '{count, plural, one {# entry} other {# entries}}';
-
 describe('Lingui, in this build', () => {
   it('declines Slovenian through all four forms', () => {
     const i18n = slovenian();
+    // Written out at each call rather than held in a constant: the
+    // extractor reads literals, so a message behind a variable never
+    // reaches the catalogue. That constraint is the price of extraction.
+    const entries = '{count, plural, one {# entry} other {# entries}}';
 
-    expect(i18n._(ENTRIES, { count: 1 })).toBe('1 vnos');
-    expect(i18n._(ENTRIES, { count: 2 })).toBe('2 vnosa');
-    expect(i18n._(ENTRIES, { count: 3 })).toBe('3 vnosi');
-    expect(i18n._(ENTRIES, { count: 5 })).toBe('5 vnosov');
+    expect(i18n._(entries, { count: 1 })).toBe('1 vnos');
+    expect(i18n._(entries, { count: 2 })).toBe('2 vnosa');
+    expect(i18n._(entries, { count: 3 })).toBe('3 vnosi');
+    expect(i18n._(entries, { count: 5 })).toBe('5 vnosov');
   });
 
   it('keeps English to its two forms from the same source string', () => {
     const i18n = setupI18n();
     i18n.loadAndActivate({ locale: 'en', messages: en });
 
-    expect(i18n._(ENTRIES, { count: 1 })).toBe('1 entry');
-    expect(i18n._(ENTRIES, { count: 2 })).toBe('2 entries');
+    expect(i18n._('{count, plural, one {# entry} other {# entries}}', { count: 1 })).toBe(
+      '1 entry',
+    );
+    expect(i18n._('{count, plural, one {# entry} other {# entries}}', { count: 2 })).toBe(
+      '2 entries',
+    );
   });
 
   it('translates with the English text as the id', () => {
