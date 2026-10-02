@@ -2,7 +2,9 @@ import { browser } from 'wxt/browser';
 import { isAuthFailure } from '../lib/api/errors';
 import { badgeForAnswer, isSaveable, planBadge } from '../lib/badge';
 import { clientFromSettings } from '../lib/client-factory';
-import { createTranslator, localeFor, type Translator } from '../lib/i18n';
+import { i18n } from '@lingui/core';
+import { type BadgeTitle } from '../lib/badge';
+import { activateLocale, localeFor } from '../lib/i18n';
 import { setIcon, setTitle } from '../lib/icon';
 import { sessionStore } from '../lib/platform/session-store';
 import { loadExisting } from '../lib/save';
@@ -12,12 +14,21 @@ import { isConfigured, loadSettings } from '../lib/settings';
 /** Long enough that flicking through tabs costs one request, not ten. */
 const LOOKUP_DELAY_MS = 400;
 
-let t: Translator = createTranslator(localeFor(null));
+activateLocale(null);
 
 /** Re-read whenever settings change: the language may have changed too. */
 async function refreshLanguage(): Promise<void> {
   const settings = await loadSettings();
-  t = createTranslator(localeFor(settings?.language ?? null));
+  activateLocale(settings?.language ?? null);
+}
+
+/**
+ * The tooltip for a decision that deliberately carries no English. Both
+ * messages are literals here so the extractor can find them; `badge.ts`
+ * only says which one.
+ */
+function toolbarTitle(title: BadgeTitle): string {
+  return title === 'signInAgain' ? i18n._('Hrček: sign in again') : i18n._('Hrček');
 }
 
 const savedState = createSavedState({
@@ -63,7 +74,7 @@ async function paint(
   const settings = await loadSettings();
   const plan = planBadge({ settings, url, known });
   await setIcon(plan.icon, tabId);
-  await setTitle(t(plan.title), tabId);
+  await setTitle(toolbarTitle(plan.title), tabId);
   if (!plan.ask || !isSaveable(url)) return;
 
   clearTimeout(pending);
@@ -71,7 +82,7 @@ async function paint(
     void savedState.get(url).then(async (answer) => {
       const settled = badgeForAnswer(answer);
       await setIcon(settled.icon, tabId);
-      await setTitle(t(settled.title), tabId);
+      await setTitle(toolbarTitle(settled.title), tabId);
     });
   }, LOOKUP_DELAY_MS);
 }

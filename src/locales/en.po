@@ -16,6 +16,159 @@ msgstr ""
 msgid "Server address"
 msgstr ""
 
+#: src/entrypoints/background.ts
+msgid "Hrček: sign in again"
+msgstr "Hrček: sign in again"
+
+#: src/entrypoints/background.ts
+msgid "Hrček"
+msgstr "Hrček"
+
+#: src/entrypoints/popup/chips.ts
+msgid "Add a tag"
+msgstr "Add a tag"
+
+#: src/entrypoints/popup/chips.ts
+msgid "Remove {tag}"
+msgstr "Remove {tag}"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Could not reach {server}."
+msgstr "Could not reach {server}."
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Something went wrong."
+msgstr ""
+
+#: src/entrypoints/popup/main.ts
+msgid "{option} (no longer offered)"
+msgstr "{option} (no longer offered)"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your fields"
+msgstr "Your fields"
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček is not configured yet."
+msgstr "Hrček is not configured yet."
+
+#: src/entrypoints/popup/main.ts
+msgid "Open settings"
+msgstr "Open settings"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your Hrček no longer accepts this token. Make a new one in settings."
+msgstr "Your Hrček no longer accepts this token. Make a new one in settings."
+
+#: src/entrypoints/popup/main.ts
+msgid "Already saved"
+msgstr "Already saved"
+
+#: src/entrypoints/popup/main.ts
+msgid "Title"
+msgstr "Title"
+
+#: src/entrypoints/popup/main.ts
+msgid "Notes"
+msgstr "Notes"
+
+#: src/entrypoints/popup/main.ts
+msgid "Picture"
+msgstr "Picture"
+
+#: src/entrypoints/popup/main.ts
+msgid "Tags"
+msgstr "Tags"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your fields could not be loaded — saving will not change them."
+msgstr "Your fields could not be loaded — saving will not change them."
+
+#: src/entrypoints/popup/main.ts
+msgid "Update"
+msgstr "Update"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Save"
+msgstr ""
+
+#: src/entrypoints/popup/main.ts
+msgid "Settings not available."
+msgstr "Settings not available."
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Saving…"
+msgstr ""
+
+#: src/entrypoints/popup/main.ts
+msgid "This address is already saved. Review the existing entry, then save again."
+msgstr "This address is already saved. Review the existing entry, then save again."
+
+#: src/entrypoints/popup/main.ts
+msgid "Saving the picture…"
+msgstr "Saving the picture…"
+
+#: src/entrypoints/popup/main.ts
+msgid "The picture could not be attached."
+msgstr "The picture could not be attached."
+
+#: src/entrypoints/popup/main.ts
+msgid "Saved, but the picture could not be attached: {reason}"
+msgstr "Saved, but the picture could not be attached: {reason}"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Saved."
+msgstr ""
+
+#: src/entrypoints/popup/main.ts
+msgid "Updated."
+msgstr "Updated."
+
+#: src/entrypoints/popup/picker.ts
+msgid "No picture"
+msgstr "No picture"
+
+#: src/entrypoints/popup/picker.ts
+msgid "It has a picture that cannot be shown here"
+msgstr "It has a picture that cannot be shown here"
+
+#: src/entrypoints/popup/picker.ts
+msgid "The picture it has"
+msgstr "The picture it has"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Declared by the page"
+msgstr "Declared by the page"
+
+#: src/entrypoints/popup/picker.ts
+msgid "From the page"
+msgstr "From the page"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Earlier pictures"
+msgstr "Earlier pictures"
+
+#: src/entrypoints/popup/picker.ts
+msgid "More pictures"
+msgstr "More pictures"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Show the picture larger"
+msgstr "Show the picture larger"
+
+#: src/entrypoints/popup/picker.ts
+msgid "kept"
+msgstr "kept"
+
+#: src/entrypoints/popup/picker.ts
+msgid "none"
+msgstr "none"
+
 #: src/entrypoints/options/main.ts
 msgid "Automatic ({language})"
 msgstr ""
@@ -53,10 +206,6 @@ msgid ", or let Hrček make one below."
 msgstr ""
 
 #: src/entrypoints/options/main.ts
-msgid "Save"
-msgstr ""
-
-#: src/entrypoints/options/main.ts
 msgid "Test connection"
 msgstr ""
 
@@ -86,22 +235,6 @@ msgstr ""
 
 #: src/entrypoints/options/main.ts
 msgid "This Hrček cannot make tokens for an extension. Create one on your clients page and paste it above."
-msgstr ""
-
-#: src/entrypoints/options/main.ts
-msgid "Could not reach {server}."
-msgstr "Could not reach {server}."
-
-#: src/entrypoints/options/main.ts
-msgid "Something went wrong."
-msgstr ""
-
-#: src/entrypoints/options/main.ts
-msgid "Saving…"
-msgstr ""
-
-#: src/entrypoints/options/main.ts
-msgid "Saved."
 msgstr ""
 
 #: src/entrypoints/options/main.ts

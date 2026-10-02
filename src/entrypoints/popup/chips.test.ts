@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
-import { createTranslator } from '../../lib/i18n';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { activateLocale } from '../../lib/i18n';
 import { createChipInput } from './chips';
 
-function mount(
-  tags: string[] = [],
-  suggest = async () => [] as string[],
-  t = createTranslator('en'),
-) {
+// Nothing renders before a locale is active: the widgets read the shared
+// Lingui instance rather than taking a translator.
+beforeEach(() => activateLocale('en'));
+
+function mount(tags: string[] = [], suggest = async () => [] as string[]) {
   const host = document.createElement('div');
   document.body.append(host);
   const onSubmit = vi.fn();
-  const chips = createChipInput(host, { tags, suggest, onSubmit, t });
+  const chips = createChipInput(host, { tags, suggest, onSubmit });
   const input = host.querySelector('input')!;
   return { host, chips, input, onSubmit };
 }
@@ -97,8 +97,11 @@ describe('createChipInput', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('asks for a tag in the language it was handed', () => {
-    const { input } = mount([], async () => [], createTranslator('sl'));
+  it('asks for a tag in the language that is active', () => {
+    activateLocale('sl');
+    const { input } = mount();
+    activateLocale('en');
+
     expect(input.placeholder).toBe('Dodaj oznako');
   });
 });

@@ -1,4 +1,4 @@
-import type { Translator } from '../../lib/i18n';
+import { i18n } from '@lingui/core';
 import type { Candidate } from '../../lib/page/candidates';
 import type { PictureChoice } from '../../lib/picture';
 
@@ -23,7 +23,6 @@ export interface PickerOptions {
    * must not quietly gain one when somebody reopens it to fix a typo.
    */
   existing: boolean;
-  t: Translator;
 }
 
 export interface Picker {
@@ -55,7 +54,7 @@ const WINDOW = 4;
 const HELD = ' held';
 
 export function createPicker(host: HTMLElement, options: PickerOptions): Picker {
-  const { candidates, held, existing, t } = options;
+  const { candidates, held, existing } = options;
 
   // Nothing to offer and nothing to drop: the row is simply absent.
   if (candidates.length === 0 && held === null) {
@@ -76,7 +75,7 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
 
   function tiles(): Tile[] {
     const list: Tile[] = [
-      { key: 'none', src: null, className: 'tile none', label: t('picker.noPicture') },
+      { key: 'none', src: null, className: 'tile none', label: i18n._('No picture') },
     ];
     if (held !== null) {
       list.push({
@@ -85,7 +84,10 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
         className: held.src === null ? 'tile held unshowable' : 'tile held',
         // A picture it has but cannot show says so, rather than looking
         // like an empty tile somebody might click away.
-        label: held.src === null ? t('picker.unshowable') : t('picker.theOneItHas'),
+        label:
+          held.src === null
+            ? i18n._('It has a picture that cannot be shown here')
+            : i18n._('The picture it has'),
       });
     }
     for (const candidate of candidates) {
@@ -93,7 +95,9 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
         key: candidate.url,
         src: candidate.url,
         className: 'tile',
-        label: candidate.fromHead ? t('picker.declaredByPage') : t('picker.fromPage'),
+        label: candidate.fromHead
+          ? i18n._('Declared by the page')
+          : i18n._('From the page'),
       });
     }
     return list;
@@ -105,10 +109,10 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
 
     host.innerHTML = `
       <div class="strip">
-        <button type="button" class="step" data-step="-1" ${start === 0 ? 'disabled' : ''} aria-label="${escapeAttribute(t('picker.earlier'))}">‹</button>
+        <button type="button" class="step" data-step="-1" ${start === 0 ? 'disabled' : ''} aria-label="${escapeAttribute(i18n._('Earlier pictures'))}">‹</button>
         <div class="tiles"></div>
-        <button type="button" class="step" data-step="1" ${start + WINDOW >= all.length ? 'disabled' : ''} aria-label="${escapeAttribute(t('picker.more'))}">›</button>
-        ${expanded ? '' : `<button type="button" class="expand quiet" aria-label="${escapeAttribute(t('picker.showLarger'))}">⤢</button>`}
+        <button type="button" class="step" data-step="1" ${start + WINDOW >= all.length ? 'disabled' : ''} aria-label="${escapeAttribute(i18n._('More pictures'))}">›</button>
+        ${expanded ? '' : `<button type="button" class="expand quiet" aria-label="${escapeAttribute(i18n._('Show the picture larger'))}">⤢</button>`}
       </div>
     `;
 
@@ -128,7 +132,7 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
         const empty = document.createElement('div');
         empty.className = 'hero empty';
         empty.textContent =
-          selected === HELD ? t('picker.theOneItHas') : t('picker.noPicture');
+          selected === HELD ? i18n._('The picture it has') : i18n._('No picture');
         hero = empty;
       }
       host.insertBefore(hero, host.firstChild);
@@ -143,7 +147,7 @@ export function createPicker(host: HTMLElement, options: PickerOptions): Picker 
       button.title = tile.label;
       button.setAttribute('aria-label', tile.label);
       if (tile.src === null) {
-        button.textContent = tile.key === HELD ? t('picker.kept') : t('picker.none');
+        button.textContent = tile.key === HELD ? i18n._('kept') : i18n._('none');
       } else {
         const image = document.createElement('img');
         image.src = tile.src;

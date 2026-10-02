@@ -1,16 +1,6 @@
+import { i18n } from '@lingui/core';
 import { browser } from 'wxt/browser';
-import en from './messages/en.json';
-import {
-  CATALOGUES,
-  DEFAULT_LOCALE,
-  type Catalogue,
-  type MessageKey,
-} from './catalogues';
-
-export type { MessageKey } from './catalogues';
-
-/** Says one thing, in one language. Handed down; never a global. */
-export type Translator = (key: MessageKey, params?: Record<string, string>) => string;
+import { CATALOGUES, DEFAULT_LOCALE } from './catalogues';
 
 export function availableLocales(): string[] {
   return Object.keys(CATALOGUES);
@@ -47,27 +37,16 @@ export function localeFor(chosen: string | null): string {
   return resolveLocale(chosen, uiLocale());
 }
 
-function substitute(template: string, params: Record<string, string>): string {
-  // Only the placeholders the caller supplied are replaced. One it did
-  // not supply is left standing: {name} in the UI reports the bug, an
-  // empty space hides it.
-  return template.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    Object.prototype.hasOwnProperty.call(params, name) ? (params[name] as string) : whole,
-  );
-}
-
-export function createTranslator(locale: string): Translator {
-  const catalogue: Catalogue = CATALOGUES[locale] ?? {};
-  const english = en as Record<string, string>;
-
-  return (key, params = {}) => {
-    const template = catalogue[key] ?? english[key];
-    if (template === undefined) {
-      // English is the source of truth; a key missing from it is a
-      // programming error, not a translation gap.
-      console.warn(`[hrcek] no message for "${key}"`);
-      return key;
-    }
-    return substitute(template, params);
-  };
+/**
+ * Make a language current. Every context calls this once before it renders
+ * anything, and again whenever the choice changes.
+ *
+ * Messages are looked up by their English text, so a message with no
+ * translation falls back to its own id and renders in English — a missing
+ * translation degrades word by word rather than emptying the interface.
+ */
+export function activateLocale(chosen: string | null): string {
+  const locale = localeFor(chosen);
+  i18n.loadAndActivate({ locale, messages: CATALOGUES[locale] ?? {} });
+  return locale;
 }

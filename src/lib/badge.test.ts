@@ -26,7 +26,7 @@ describe('planBadge', () => {
   it('greys out when there is no settings at all', () => {
     expect(planBadge({ settings: null, url: 'https://example.com/a' })).toEqual({
       icon: 'unconfigured',
-      title: 'toolbar.name',
+      title: 'name',
       ask: false,
     });
   });
@@ -38,13 +38,13 @@ describe('planBadge', () => {
       settings: settings({ token: null }),
       url: 'https://example.com/a',
     });
-    expect(plan).toEqual({ icon: 'unconfigured', title: 'toolbar.name', ask: false });
+    expect(plan).toEqual({ icon: 'unconfigured', title: 'name', ask: false });
   });
 
   it('asks about an ordinary page when the indicator is on', () => {
     expect(planBadge({ settings: settings(), url: 'https://example.com/a' })).toEqual({
       icon: 'configured',
-      title: 'toolbar.name',
+      title: 'name',
       ask: true,
     });
   });
@@ -74,7 +74,7 @@ describe('planBadge', () => {
       url: 'https://example.com/a.pdf',
       known: 'held',
     });
-    expect(plan).toEqual({ icon: 'saved', title: 'toolbar.name', ask: false });
+    expect(plan).toEqual({ icon: 'saved', title: 'name', ask: false });
   });
 
   it('names the button on every branch, so no tooltip goes stale', () => {
@@ -86,34 +86,34 @@ describe('planBadge', () => {
       planBadge({ settings: settings({ showSavedState: false }), url: 'https://e.test' }),
       planBadge({ settings: settings(), url: 'https://e.test' }),
     ]) {
-      expect(plan.title).toBe('toolbar.name');
+      expect(plan.title).toBe('name');
     }
   });
 });
 
 describe('badgeForAnswer', () => {
   it('ticks a held address', () => {
-    expect(badgeForAnswer('held')).toEqual({ icon: 'saved', title: 'toolbar.name' });
+    expect(badgeForAnswer('held')).toEqual({ icon: 'saved', title: 'name' });
   });
 
   it('leaves the plain hamster for one that is not held', () => {
     expect(badgeForAnswer('not-held')).toEqual({
       icon: 'configured',
-      title: 'toolbar.name',
+      title: 'name',
     });
   });
 
   it('abstains rather than guessing when the question could not be asked', () => {
     expect(badgeForAnswer('unknown')).toEqual({
       icon: 'configured',
-      title: 'toolbar.name',
+      title: 'name',
     });
   });
 
   it('greys out and says so when the token was refused', () => {
     expect(badgeForAnswer('unauthorized')).toEqual({
       icon: 'unconfigured',
-      title: 'toolbar.signInAgain',
+      title: 'signInAgain',
     });
   });
 });

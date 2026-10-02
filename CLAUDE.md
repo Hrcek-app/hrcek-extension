@@ -29,6 +29,27 @@ Design spec: `docs/superpowers/specs/2026-09-16-hrcek-extension-design.md`.
   Chrome Web Store zip
 - `pnpm refresh-schema` — re-vendor `openapi.json` from `../hrcek` and
   regenerate `src/lib/api/types.gen.ts`. Run when the server API changes.
+- `pnpm i18n:extract` — rebuild `src/locales/*.po` from the code. Run
+  after adding or changing any message.
+
+## Messages
+
+Messages go through Lingui, keyed by their English text: write
+`i18n._('Save')`, never an invented key. `pnpm i18n:extract` then finds
+it and adds it to both catalogues, reporting what is still untranslated.
+
+- **The extractor reads literals.** A message held in a variable never
+  reaches the catalogue, which is why `lib/badge.ts` returns a name the
+  entrypoint turns into a message rather than the message itself.
+- **Catalogues are `src/locales/*.po`** — English and translation on
+  adjacent lines. Nothing compiled is committed; `@lingui/vite-plugin`
+  compiles on import, and it must be registered in `vitest.config.ts` as
+  well as `wxt.config.ts`.
+- **Both catalogues load statically**, because the background is a
+  classic script on both targets and a service worker cannot
+  dynamic-import. Rendering stays synchronous as a result.
+- A test fails the build on any untranslated message. Deliberate while
+  the catalogue is small.
 
 ## Architecture rules
 

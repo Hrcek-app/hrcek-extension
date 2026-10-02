@@ -16,6 +16,159 @@ msgstr "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov
 msgid "Server address"
 msgstr "Naslov strežnika"
 
+#: src/entrypoints/background.ts
+msgid "Hrček: sign in again"
+msgstr "Hrček: prijavite se znova"
+
+#: src/entrypoints/background.ts
+msgid "Hrček"
+msgstr "Hrček"
+
+#: src/entrypoints/popup/chips.ts
+msgid "Add a tag"
+msgstr "Dodaj oznako"
+
+#: src/entrypoints/popup/chips.ts
+msgid "Remove {tag}"
+msgstr "Odstrani {tag}"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Could not reach {server}."
+msgstr "Strežnika {server} ni bilo mogoče doseči."
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Something went wrong."
+msgstr "Nekaj je šlo narobe."
+
+#: src/entrypoints/popup/main.ts
+msgid "{option} (no longer offered)"
+msgstr "{option} (ni več na voljo)"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your fields"
+msgstr "Vaša polja"
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček is not configured yet."
+msgstr "Hrček še ni nastavljen."
+
+#: src/entrypoints/popup/main.ts
+msgid "Open settings"
+msgstr "Odpri nastavitve"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your Hrček no longer accepts this token. Make a new one in settings."
+msgstr "Vaš Hrček tega žetona ne sprejema več. Ustvarite novega v nastavitvah."
+
+#: src/entrypoints/popup/main.ts
+msgid "Already saved"
+msgstr "Že shranjeno"
+
+#: src/entrypoints/popup/main.ts
+msgid "Title"
+msgstr "Naslov"
+
+#: src/entrypoints/popup/main.ts
+msgid "Notes"
+msgstr "Zapiski"
+
+#: src/entrypoints/popup/main.ts
+msgid "Picture"
+msgstr "Slika"
+
+#: src/entrypoints/popup/main.ts
+msgid "Tags"
+msgstr "Oznake"
+
+#: src/entrypoints/popup/main.ts
+msgid "Your fields could not be loaded — saving will not change them."
+msgstr "Vaših polj ni bilo mogoče naložiti — shranjevanje jih ne bo spremenilo."
+
+#: src/entrypoints/popup/main.ts
+msgid "Update"
+msgstr "Posodobi"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Save"
+msgstr "Shrani"
+
+#: src/entrypoints/popup/main.ts
+msgid "Settings not available."
+msgstr "Nastavitve niso na voljo."
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Saving…"
+msgstr "Shranjujem…"
+
+#: src/entrypoints/popup/main.ts
+msgid "This address is already saved. Review the existing entry, then save again."
+msgstr "Ta naslov je že shranjen. Preglejte obstoječi vnos in shranite znova."
+
+#: src/entrypoints/popup/main.ts
+msgid "Saving the picture…"
+msgstr "Shranjujem sliko…"
+
+#: src/entrypoints/popup/main.ts
+msgid "The picture could not be attached."
+msgstr "Slike ni bilo mogoče priložiti."
+
+#: src/entrypoints/popup/main.ts
+msgid "Saved, but the picture could not be attached: {reason}"
+msgstr "Shranjeno, slike pa ni bilo mogoče priložiti: {reason}"
+
+#: src/entrypoints/options/main.ts
+#: src/entrypoints/popup/main.ts
+msgid "Saved."
+msgstr "Shranjeno."
+
+#: src/entrypoints/popup/main.ts
+msgid "Updated."
+msgstr "Posodobljeno."
+
+#: src/entrypoints/popup/picker.ts
+msgid "No picture"
+msgstr "Brez slike"
+
+#: src/entrypoints/popup/picker.ts
+msgid "It has a picture that cannot be shown here"
+msgstr "Ima sliko, ki je tu ni mogoče pokazati"
+
+#: src/entrypoints/popup/picker.ts
+msgid "The picture it has"
+msgstr "Slika, ki jo ima"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Declared by the page"
+msgstr "Napovedana na strani"
+
+#: src/entrypoints/popup/picker.ts
+msgid "From the page"
+msgstr "S strani"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Earlier pictures"
+msgstr "Prejšnje slike"
+
+#: src/entrypoints/popup/picker.ts
+msgid "More pictures"
+msgstr "Več slik"
+
+#: src/entrypoints/popup/picker.ts
+msgid "Show the picture larger"
+msgstr "Pokaži sliko večjo"
+
+#: src/entrypoints/popup/picker.ts
+msgid "kept"
+msgstr "ohrani"
+
+#: src/entrypoints/popup/picker.ts
+msgid "none"
+msgstr "brez"
+
 #: src/entrypoints/options/main.ts
 msgid "Automatic ({language})"
 msgstr "Samodejno ({language})"
@@ -53,10 +206,6 @@ msgid ", or let Hrček make one below."
 msgstr ", ali pa naj ga Hrček ustvari spodaj."
 
 #: src/entrypoints/options/main.ts
-msgid "Save"
-msgstr "Shrani"
-
-#: src/entrypoints/options/main.ts
 msgid "Test connection"
 msgstr "Preveri povezavo"
 
@@ -87,22 +236,6 @@ msgstr "Preveč poskusov. Počakajte nekaj časa in poskusite znova ali prilepit
 #: src/entrypoints/options/main.ts
 msgid "This Hrček cannot make tokens for an extension. Create one on your clients page and paste it above."
 msgstr "Ta Hrček ne zna ustvariti žetonov za razširitev. Ustvarite ga na strani odjemalcev in ga prilepite zgoraj."
-
-#: src/entrypoints/options/main.ts
-msgid "Could not reach {server}."
-msgstr "Strežnika {server} ni bilo mogoče doseči."
-
-#: src/entrypoints/options/main.ts
-msgid "Something went wrong."
-msgstr "Nekaj je šlo narobe."
-
-#: src/entrypoints/options/main.ts
-msgid "Saving…"
-msgstr "Shranjujem…"
-
-#: src/entrypoints/options/main.ts
-msgid "Saved."
-msgstr "Shranjeno."
 
 #: src/entrypoints/options/main.ts
 msgid "Saved. Site access was declined — press Save again to grant it."

@@ -2,7 +2,8 @@ import { browser } from 'wxt/browser';
 import { HrcekApiError, HrcekNetworkError, isAuthFailure } from '../../lib/api/errors';
 import { HrcekClient } from '../../lib/api/client';
 import { clientFromSettings } from '../../lib/client-factory';
-import { createTranslator, localeFor, type Translator } from '../../lib/i18n';
+import { i18n } from '@lingui/core';
+import { activateLocale } from '../../lib/i18n';
 import { harvestCandidates } from '../../lib/page/harvest-client';
 import { showToast } from '../../lib/page/toast-client';
 import { attachPicture, fetchPictureBytes } from '../../lib/picture';
@@ -27,7 +28,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 
 // A fresh install has no settings yet, and the popup still has to speak:
 // Automatic resolves against the browser until main() knows better.
-let t: Translator = createTranslator(localeFor(null));
+activateLocale(null);
 
 let settings: Settings | null = null;
 let client: HrcekClient | null = null;
@@ -161,9 +162,9 @@ function messageFor(error: unknown): string {
   // This one is written by the client, in English. Say it here instead,
   // in the language the rest of the popup is speaking.
   if (error instanceof HrcekNetworkError) {
-    return t('error.unreachable', { server: settings?.serverUrl ?? '' });
+    return i18n._('Could not reach {server}.', { server: settings?.serverUrl ?? '' });
   }
-  return t('error.somethingWrong');
+  return i18n._('Something went wrong.');
 }
 
 function fieldControl(input: FieldInput): string {
@@ -181,7 +182,7 @@ function fieldControl(input: FieldInput): string {
           option === ''
             ? '—'
             : option === input.value && isOrphan
-              ? escapeText(t('popup.noLongerOffered', { option }))
+              ? escapeText(i18n._('{option} (no longer offered)', { option }))
               : escapeText(option);
         return `<option value="${escapeAttribute(option)}"${option === input.value ? ' selected' : ''}>${label}</option>`;
       })
@@ -215,7 +216,7 @@ function fieldsMarkup(inputs: FieldInput[]): string {
     )
     .join('');
   // Closed by default: these are optional, and most saves never touch them.
-  return `<details id="fields"><summary>${escapeText(t('popup.yourFields'))}</summary><div class="field-body">${rows}</div></details>`;
+  return `<details id="fields"><summary>${escapeText(i18n._('Your fields'))}</summary><div class="field-body">${rows}</div></details>`;
 }
 
 function renderUnconfigured(): void {
@@ -224,8 +225,8 @@ function renderUnconfigured(): void {
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
-    <p>${escapeText(t('popup.notConfigured'))}</p>
-    <button id="open-options">${escapeText(t('popup.openSettings'))}</button>
+    <p>${escapeText(i18n._('Hrček is not configured yet.'))}</p>
+    <button id="open-options">${escapeText(i18n._('Open settings'))}</button>
   `;
   document
     .querySelector<HTMLButtonElement>('#open-options')!
@@ -238,8 +239,8 @@ function renderUnauthorized(): void {
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
-    <p>${escapeText(t('popup.signInAgain'))}</p>
-    <button id="open-options">${escapeText(t('popup.openSettings'))}</button>
+    <p>${escapeText(i18n._('Your Hrček no longer accepts this token. Make a new one in settings.'))}</p>
+    <button id="open-options">${escapeText(i18n._('Open settings'))}</button>
   `;
   document
     .querySelector<HTMLButtonElement>('#open-options')!
@@ -252,17 +253,17 @@ function renderForm(form: FormState, existing: boolean): void {
     <div class="hrcek-header">
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
-      ${existing ? `<span class="aside">${escapeText(t('popup.alreadySaved'))}</span>` : ''}
+      ${existing ? `<span class="aside">${escapeText(i18n._('Already saved'))}</span>` : ''}
     </div>
     <span class="address" id="address" title=""></span>
     <form id="entry-form">
-      <div class="field"><label for="title">${escapeText(t('popup.title'))}</label><input id="title" /></div>
-      <div class="field"><label for="notes">${escapeText(t('popup.notes'))}</label><textarea id="notes" rows="3"></textarea></div>
-      <div class="field" id="picture-field"><label>${escapeText(t('popup.picture'))}</label><div id="picture"></div></div>
-      <div class="field"><label>${escapeText(t('popup.tags'))}</label><div id="tags"></div></div>
-      ${fieldsFailed ? `<p id="fields-trouble" class="trouble">${escapeText(t('popup.fieldsUnavailable'))}</p>` : ''}
+      <div class="field"><label for="title">${escapeText(i18n._('Title'))}</label><input id="title" /></div>
+      <div class="field"><label for="notes">${escapeText(i18n._('Notes'))}</label><textarea id="notes" rows="3"></textarea></div>
+      <div class="field" id="picture-field"><label>${escapeText(i18n._('Picture'))}</label><div id="picture"></div></div>
+      <div class="field"><label>${escapeText(i18n._('Tags'))}</label><div id="tags"></div></div>
+      ${fieldsFailed ? `<p id="fields-trouble" class="trouble">${escapeText(i18n._('Your fields could not be loaded — saving will not change them.'))}</p>` : ''}
       ${fieldsMarkup(form.fields)}
-      <button type="submit" id="save">${escapeText(existing ? t('popup.update') : t('popup.save'))}</button>
+      <button type="submit" id="save">${escapeText(existing ? i18n._('Update') : i18n._('Save'))}</button>
       <p id="status" data-kind="info"></p>
     </form>
   `;
@@ -272,7 +273,7 @@ function renderForm(form: FormState, existing: boolean): void {
   document.querySelector<HTMLInputElement>('#title')!.value = form.title;
   document.querySelector<HTMLTextAreaElement>('#notes')!.value = form.notes;
   const pictureHost = document.querySelector<HTMLDivElement>('#picture')!;
-  picker = createPicker(pictureHost, { candidates, held, existing, t });
+  picker = createPicker(pictureHost, { candidates, held, existing });
   // The row is absent, not empty, when the page offered nothing.
   if (pictureHost.innerHTML === '') {
     document.querySelector<HTMLDivElement>('#picture-field')!.hidden = true;
@@ -286,7 +287,6 @@ function renderForm(form: FormState, existing: boolean): void {
             .listLabels({ startsWith: prefix })
             .then((labels) => labels.map((label) => label.name)),
     onSubmit: () => void save(),
-    t,
   });
 
   const entryForm = document.querySelector<HTMLFormElement>('#entry-form')!;
@@ -336,10 +336,10 @@ async function save(): Promise<void> {
   // would miss it.
   picker?.collapse();
   if (!settings || !client) {
-    setStatus('error', t('popup.settingsUnavailable'));
+    setStatus('error', i18n._('Settings not available.'));
     return;
   }
-  setStatus('info', t('popup.saving'));
+  setStatus('info', i18n._('Saving…'));
 
   // The initial look-before-write failed (network blip, 5xx — not a
   // confirmed "not held"). Posting now could blind-replace a held entry's
@@ -351,7 +351,12 @@ async function save(): Promise<void> {
         lookupFailed = false;
         await loadHeldPicture(existing.image);
         renderForm(entryToForm(existing, definitions), true);
-        setStatus('error', t('popup.alreadySavedReview'));
+        setStatus(
+          'error',
+          i18n._(
+            'This address is already saved. Review the existing entry, then save again.',
+          ),
+        );
         return;
       }
       lookupFailed = false;
@@ -386,7 +391,7 @@ async function save(): Promise<void> {
     // The picture's bytes live only in this popup — Chrome serialises
     // messages as JSON, so they cannot be handed to the background to
     // finish with. The popup waits the second or two instead.
-    if (choice.kind !== 'unchanged') setStatus('info', t('popup.savingPicture'));
+    if (choice.kind !== 'unchanged') setStatus('info', i18n._('Saving the picture…'));
     // image_url is fetched inside the save's own transaction, so an
     // address the server will not go to takes the save with it. submitSave
     // posts again without the picture when that happens and reports the
@@ -398,17 +403,22 @@ async function save(): Promise<void> {
         outcome.entry,
         choice,
         bytes,
-        t('error.pictureNotAttached'),
+        i18n._('The picture could not be attached.'),
       ));
     if (trouble !== null) {
       // The entry stands; only the picture did not. Still a close: the
       // entry saved, which is what was asked for.
-      await finish('error', t('popup.savedPictureTrouble', { reason: trouble }));
+      await finish(
+        'error',
+        i18n._('Saved, but the picture could not be attached: {reason}', {
+          reason: trouble,
+        }),
+      );
       return;
     }
     await finish(
       'success',
-      outcome.status === 'created' ? t('popup.saved') : t('popup.updated'),
+      outcome.status === 'created' ? i18n._('Saved.') : i18n._('Updated.'),
     );
   } catch (error) {
     // The entry did not save. Stay open: this is the case where somebody
@@ -421,8 +431,7 @@ async function main(): Promise<void> {
   settings = await loadSettings();
   // A fresh install has no settings and still has to say so: Automatic
   // resolves against the browser.
-  const locale = localeFor(settings?.language ?? null);
-  t = createTranslator(locale);
+  const locale = activateLocale(settings?.language ?? null);
   // A server address saved before a token is minted — the documented
   // first-run order, since the mint panel sits below the Save button —
   // is not configured yet. Falling through would send an unauthenticated
