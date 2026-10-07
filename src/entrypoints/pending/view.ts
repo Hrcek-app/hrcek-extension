@@ -107,6 +107,12 @@ export function createPendingView(host: HTMLElement, deps: PendingDeps): Pending
       lines.push(
         i18n._('Your Hrček no longer accepts this token. Make a new one in settings.'),
       );
+    } else if (outcome.stopped === 'failed') {
+      lines.push(
+        i18n._(
+          'Hrček could not be asked about the waiting entries: something went wrong on its side.',
+        ),
+      );
     } else {
       if (outcome.saved > 0) {
         lines.push(
