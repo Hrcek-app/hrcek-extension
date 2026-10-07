@@ -147,6 +147,25 @@ describe('syncQueue', () => {
     expect(await queue.count()).toBe(2);
   });
 
+  it('stops when Hrček cannot be asked, refusing nothing', async () => {
+    const queue = await queueWith('https://e.test/a', 'https://e.test/b');
+    const { client, saved } = fakeClient({
+      fail: {
+        lookup: () => new HrcekApiError(530, 'HRC-CLIENT-UNPARSEABLE', 'origin down'),
+      },
+    });
+    const result = await syncQueue(client, queue, SERVER);
+    expect(result).toEqual({
+      saved: 0,
+      held: 0,
+      refused: 0,
+      withoutPicture: [],
+      stopped: 'failed',
+    });
+    expect(saved).toEqual([]);
+    expect((await queue.list()).map((e) => e.state.kind)).toEqual(['waiting', 'waiting']);
+  });
+
   it('skips entries meant for another server', async () => {
     const queue = await queueWith('https://e.test/a');
     const { client, saved } = fakeClient();
