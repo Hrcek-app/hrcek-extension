@@ -7,30 +7,6 @@ msgstr ""
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Choose a picture"
-msgstr "Izberi sliko"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Use this picture"
-msgstr "Uporabi to sliko"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Selected"
-msgstr "Izbrano"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Picture {number} of {total}"
-msgstr "Slika {number} od {total}"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "current"
-msgstr "trenutna"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Close"
-msgstr "Zapri"
-
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}"
@@ -153,50 +129,46 @@ msgstr "Shranjeno."
 msgid "Updated."
 msgstr "Posodobljeno."
 
-#: src/entrypoints/popup/picker.ts
-msgid "No picture"
-msgstr "Brez slike"
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Choose a picture"
+msgstr "Izberi sliko"
 
-#: src/entrypoints/popup/picker.ts
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Use this picture"
+msgstr "Uporabi to sliko"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Selected"
+msgstr "Izbrano"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Earlier pictures"
+msgstr "Prejšnje slike"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "More pictures"
+msgstr "Več slik"
+
 #: src/entrypoints/popup/picture-overlay.ts
 #: src/entrypoints/popup/picture-row.ts
 msgid "It has a picture that cannot be shown here"
 msgstr "Ima sliko, ki je tu ni mogoče pokazati"
 
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
 msgid "The picture it has"
 msgstr "Slika, ki jo ima"
 
-#: src/entrypoints/popup/picker.ts
-msgid "Declared by the page"
-msgstr "Napovedana na strani"
-
-#: src/entrypoints/popup/picker.ts
-msgid "From the page"
-msgstr "S strani"
-
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
-msgid "Earlier pictures"
-msgstr "Prejšnje slike"
+msgid "Picture {number} of {total}"
+msgstr "Slika {number} od {total}"
 
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
-msgid "More pictures"
-msgstr "Več slik"
+msgid "current"
+msgstr "trenutna"
 
-#: src/entrypoints/popup/picker.ts
-msgid "Show the picture larger"
-msgstr "Pokaži sliko večjo"
-
-#: src/entrypoints/popup/picker.ts
-msgid "kept"
-msgstr "ohrani"
-
-#: src/entrypoints/popup/picker.ts
-msgid "none"
-msgstr "brez"
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Close"
+msgstr "Zapri"
 
 #: src/entrypoints/popup/picture-row.ts
 msgid "Include picture"
