@@ -24,7 +24,18 @@ export interface SyncResult {
   refused: number;
   /** Titles (or addresses, untitled) saved without their picture. */
   withoutPicture: string[];
-  stopped: 'unavailable' | 'unauthorized' | null;
+  /**
+   * Why the run ended early: an outage, a refused token, or a lookup
+   * Hrček failed to answer for any other reason.
+   */
+  stopped: 'unavailable' | 'unauthorized' | 'failed' | null;
+}
+
+/** Failures that end a run whichever step they come from. */
+function stopFor(error: unknown): 'unavailable' | 'unauthorized' | null {
+  if (isUnavailable(error)) return 'unavailable';
+  if (isAuthFailure(error)) return 'unauthorized';
+  return null;
 }
 
 /**
@@ -49,9 +60,10 @@ export async function sendQueued(client: HrcekClient, item: Sendable): Promise<S
 /**
  * Looks before writing, entry by entry, oldest first. Hrček holding the
  * address already is not this routine's to settle: the entry is held for
- * a person. Only waiting entries meant for `server` are touched; the
- * first sign of an outage or a refused token ends the run with
- * everything after it as it was.
+ * a person. Only waiting entries meant for `server` are touched. The
+ * first sign of an outage, a refused token
+ * or a lookup that fails any other way ends the run with everything
+ * after it as it was.
  */
 export async function syncQueue(
   client: HrcekClient,
@@ -68,24 +80,31 @@ export async function syncQueue(
   for (const entry of await queue.list()) {
     if (entry.server !== server || entry.state.kind !== 'waiting') continue;
     const { url } = entry.request;
+    let existing: EntryOut | null;
     try {
-      if ((await loadExisting(client, url)) !== null) {
-        await queue.mark(url, entry.savedAt, { kind: 'held' });
-        result.held += 1;
-        continue;
-      }
+      existing = await loadExisting(client, url);
+    } catch (error) {
+      // Whatever kept Hrček from answering about this entry keeps it from
+      // answering about the next one too. Refusing is the send's verdict
+      // alone: a lookup that fails says nothing about the entry.
+      result.stopped = stopFor(error) ?? 'failed';
+      break;
+    }
+    if (existing !== null) {
+      await queue.mark(url, entry.savedAt, { kind: 'held' });
+      result.held += 1;
+      continue;
+    }
+    try {
       const sent = await sendQueued(client, entry);
       // Only this copy: the popup may have saved a newer one meanwhile.
       await queue.remove(url, entry.savedAt);
       result.saved += 1;
       if (sent.trouble !== null) result.withoutPicture.push(entry.request.title || url);
     } catch (error) {
-      if (isUnavailable(error)) {
-        result.stopped = 'unavailable';
-        break;
-      }
-      if (isAuthFailure(error)) {
-        result.stopped = 'unauthorized';
+      const stop = stopFor(error);
+      if (stop !== null) {
+        result.stopped = stop;
         break;
       }
       if (error instanceof HrcekApiError) {
