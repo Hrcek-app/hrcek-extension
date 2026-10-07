@@ -32,6 +32,14 @@ being read, not written. Signing in with a new token, or switching the
 indicator off, clears everything already recorded; closing the browser
 clears it outright.
 
+While your Hrček cannot be reached, a save is kept in the extension's
+own IndexedDB storage instead: what it would have sent (address,
+title, notes, tags, field values), the picture you chose, when it was
+saved, and the server address it was meant for. At most 100 are kept.
+Each one stays until it is saved to that server or you delete it from
+the "Waiting to sync" page, and it is never sent anywhere else.
+Removing the extension deletes them all.
+
 **Never kept:** your password. It is used once, to ask Hrček for a
 token, and is written nowhere.
 

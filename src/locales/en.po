@@ -7,34 +7,6 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/entrypoints/popup/main.ts
-msgid "Hrček can't be reached. Saving keeps this entry here until it can."
-msgstr "Hrček can't be reached. Saving keeps this entry here until it can."
-
-#: src/entrypoints/popup/main.ts
-msgid "Waiting to be saved to Hrček."
-msgstr "Waiting to be saved to Hrček."
-
-#: src/entrypoints/popup/main.ts
-msgid "Hrček refused this entry: {reason}"
-msgstr "Hrček refused this entry: {reason}"
-
-#: src/entrypoints/popup/main.ts
-msgid "You also have an unsynced copy of this page — saving here replaces it."
-msgstr "You also have an unsynced copy of this page — saving here replaces it."
-
-#: src/entrypoints/popup/main.ts
-msgid "100 entries are already waiting to be saved. Sync or delete some first."
-msgstr "100 entries are already waiting to be saved. Sync or delete some first."
-
-#: src/entrypoints/popup/main.ts
-msgid "Kept for later — it will be saved to Hrček once it can be reached."
-msgstr "Kept for later — it will be saved to Hrček once it can be reached."
-
-#: src/entrypoints/popup/main.ts
-msgid "Save for later"
-msgstr "Save for later"
-
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr ""
@@ -57,6 +29,7 @@ msgid "Waiting to sync ({count})…"
 msgstr "Waiting to sync ({count})…"
 
 #: src/entrypoints/background.ts
+#: src/entrypoints/pending/view.ts
 msgid "Sync now"
 msgstr "Sync now"
 
@@ -77,10 +50,35 @@ msgstr "Could not reach {server}."
 msgid "The picture could not be attached."
 msgstr "The picture could not be attached."
 
+#: src/entrypoints/popup/main.ts
+msgid "Hrček can't be reached. Saving keeps this entry here until it can."
+msgstr "Hrček can't be reached. Saving keeps this entry here until it can."
+
+#: src/entrypoints/popup/main.ts
+msgid "Waiting to be saved to Hrček."
+msgstr "Waiting to be saved to Hrček."
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček refused this entry: {reason}"
+msgstr "Hrček refused this entry: {reason}"
+
+#: src/entrypoints/popup/main.ts
+msgid "You also have an unsynced copy of this page — saving here replaces it."
+msgstr "You also have an unsynced copy of this page — saving here replaces it."
+
+#: src/entrypoints/popup/main.ts
+msgid "100 entries are already waiting to be saved. Sync or delete some first."
+msgstr "100 entries are already waiting to be saved. Sync or delete some first."
+
 #: src/entrypoints/options/main.ts
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Something went wrong."
 msgstr ""
+
+#: src/entrypoints/popup/main.ts
+msgid "Kept for later — it will be saved to Hrček once it can be reached."
+msgstr "Kept for later — it will be saved to Hrček once it can be reached."
 
 #: src/entrypoints/popup/main.ts
 msgid "{option} (no longer offered)"
@@ -90,6 +88,7 @@ msgstr "{option} (no longer offered)"
 msgid "Your fields"
 msgstr "Your fields"
 
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Hrček is not configured yet."
 msgstr "Hrček is not configured yet."
@@ -98,6 +97,7 @@ msgstr "Hrček is not configured yet."
 msgid "Open settings"
 msgstr "Open settings"
 
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Your Hrček no longer accepts this token. Make a new one in settings."
 msgstr "Your Hrček no longer accepts this token. Make a new one in settings."
@@ -165,6 +165,10 @@ msgstr ""
 msgid "Updated."
 msgstr "Updated."
 
+#: src/entrypoints/popup/main.ts
+msgid "Save for later"
+msgstr "Save for later"
+
 #: src/entrypoints/popup/picture-overlay.ts
 msgid "Choose a picture"
 msgstr "Choose a picture"
@@ -213,6 +217,90 @@ msgstr "Include picture"
 #: src/entrypoints/popup/picture-row.ts
 msgid "Change"
 msgstr "Change"
+
+#: src/entrypoints/pending/view.ts
+msgid "Waiting to sync"
+msgstr "Waiting to sync"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček can't be reached."
+msgstr "Hrček can't be reached."
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček could not be asked about the waiting entries: something went wrong on its side."
+msgstr "Hrček could not be asked about the waiting entries: something went wrong on its side."
+
+#: src/entrypoints/pending/view.ts
+msgid "{count, plural, one {# entry saved.} other {# entries saved.}}"
+msgstr "{count, plural, one {# entry saved.} other {# entries saved.}}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved without its picture: {title}"
+msgstr "Saved without its picture: {title}"
+
+#: src/entrypoints/pending/view.ts
+msgid "{count, plural, one {# is already on Hrček and waits for your review.} other {# are already on Hrček and wait for your review.}}"
+msgstr "{count, plural, one {# is already on Hrček and waits for your review.} other {# are already on Hrček and wait for your review.}}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Delete"
+msgstr "Delete"
+
+#: src/entrypoints/pending/view.ts
+msgid "Delete for good"
+msgstr "Delete for good"
+
+#: src/entrypoints/pending/view.ts
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/entrypoints/pending/view.ts
+msgid "Open page"
+msgstr "Open page"
+
+#: src/entrypoints/pending/view.ts
+msgid "Loading what Hrček has…"
+msgstr "Loading what Hrček has…"
+
+#: src/entrypoints/pending/view.ts
+msgid "Keep what's on Hrček"
+msgstr "Keep what's on Hrček"
+
+#: src/entrypoints/pending/view.ts
+msgid "Replace with mine"
+msgstr "Replace with mine"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček no longer has this address."
+msgstr "Hrček no longer has this address."
+
+#: src/entrypoints/pending/view.ts
+msgid "On Hrček"
+msgstr "On Hrček"
+
+#: src/entrypoints/pending/view.ts
+msgid "Yours"
+msgstr "Yours"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček can't be reached, so what it has can't be shown."
+msgstr "Hrček can't be reached, so what it has can't be shown."
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved {when}"
+msgstr "Saved {when}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved for {server}, which is not the one in your settings."
+msgstr "Saved for {server}, which is not the one in your settings."
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček refused it: {reason}"
+msgstr "Hrček refused it: {reason}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Nothing is waiting."
+msgstr "Nothing is waiting."
 
 #: src/entrypoints/options/main.ts
 msgid "Automatic ({language})"
