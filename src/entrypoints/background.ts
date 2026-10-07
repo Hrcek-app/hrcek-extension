@@ -9,7 +9,7 @@ import { setBadge, setIcon, setTitle } from '../lib/icon';
 import { pendingBadgeText } from '../lib/offline/keep';
 import { openQueue } from '../lib/offline/queue';
 import { createRunner } from '../lib/offline/runner';
-import { sendQueued, syncQueue, type SyncResult } from '../lib/offline/sync';
+import { canReplace, sendQueued, syncQueue, type SyncResult } from '../lib/offline/sync';
 import { isUnavailable } from '../lib/offline/unavailable';
 import { toolbarMenuContext } from '../lib/platform/menus';
 import { sessionStore } from '../lib/platform/session-store';
@@ -105,10 +105,12 @@ type ReplaceAnswer =
 /** "Replace with mine": sends a held copy as it is, over Hrček's. */
 function replace(url: string): Promise<ReplaceAnswer> {
   return runner.exclusive(async () => {
-    const settings = await loadSettings();
-    const entry = await queue.get(url);
-    if (!isConfigured(settings) || entry === null) return { ok: true } as const;
     try {
+      const settings = await loadSettings();
+      const entry = await queue.get(url);
+      if (!isConfigured(settings) || entry === null) return { ok: true } as const;
+      if (!canReplace(entry, settings.serverUrl))
+        return { ok: false, unavailable: false, message: null } as const;
       const client = clientFromSettings(settings, localeFor(settings.language));
       await sendQueued(client, entry);
       await queue.remove(url, entry.savedAt);
