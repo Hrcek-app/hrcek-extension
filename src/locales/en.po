@@ -7,13 +7,33 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/entrypoints/background.ts
-msgid "Waiting to sync ({count})…"
-msgstr "Waiting to sync ({count})…"
+#: src/entrypoints/popup/main.ts
+msgid "Hrček can't be reached. Saving keeps this entry here until it can."
+msgstr "Hrček can't be reached. Saving keeps this entry here until it can."
 
-#: src/entrypoints/background.ts
-msgid "Sync now"
-msgstr "Sync now"
+#: src/entrypoints/popup/main.ts
+msgid "Waiting to be saved to Hrček."
+msgstr "Waiting to be saved to Hrček."
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček refused this entry: {reason}"
+msgstr "Hrček refused this entry: {reason}"
+
+#: src/entrypoints/popup/main.ts
+msgid "You also have an unsynced copy of this page — saving here replaces it."
+msgstr "You also have an unsynced copy of this page — saving here replaces it."
+
+#: src/entrypoints/popup/main.ts
+msgid "100 entries are already waiting to be saved. Sync or delete some first."
+msgstr "100 entries are already waiting to be saved. Sync or delete some first."
+
+#: src/entrypoints/popup/main.ts
+msgid "Kept for later — it will be saved to Hrček once it can be reached."
+msgstr "Kept for later — it will be saved to Hrček once it can be reached."
+
+#: src/entrypoints/popup/main.ts
+msgid "Save for later"
+msgstr "Save for later"
 
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
@@ -31,6 +51,14 @@ msgstr "Hrček: sign in again"
 #: src/entrypoints/background.ts
 msgid "Hrček"
 msgstr "Hrček"
+
+#: src/entrypoints/background.ts
+msgid "Waiting to sync ({count})…"
+msgstr "Waiting to sync ({count})…"
+
+#: src/entrypoints/background.ts
+msgid "Sync now"
+msgstr "Sync now"
 
 #: src/entrypoints/popup/chips.ts
 msgid "Add a tag"

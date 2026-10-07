@@ -1,6 +1,7 @@
 import { buildFieldInputs, fieldsForRequest, type FieldInput } from '../../lib/fields';
 import type { EntryOut, FieldOut } from '../../lib/api/types';
 import type { SaveRequest } from '../../lib/save';
+import type { QueuedEntry } from '../../lib/offline/queue';
 
 export interface FormState {
   url: string;
@@ -43,5 +44,20 @@ export function formToSaveRequest(form: FormState): SaveRequest {
     notes: form.notes,
     tags: parseTags(form.tags),
     fields: fieldsForRequest(form.fields),
+  };
+}
+
+/** A queued copy, back in the form it was saved from. */
+export function queuedToForm(
+  entry: QueuedEntry,
+  definitions: FieldOut[] | null,
+): FormState {
+  const { request } = entry;
+  return {
+    url: request.url,
+    title: request.title,
+    notes: request.notes,
+    tags: request.tags.join(', '),
+    fields: buildFieldInputs(definitions, request.fields),
   };
 }

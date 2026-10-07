@@ -42,6 +42,18 @@ async function heldEntry(address: string) {
   return response.json();
 }
 
+/** The toolbar badge's text, read from the extension's service worker. */
+async function badgeText(context: BrowserContext): Promise<string> {
+  const [worker] = context.serviceWorkers();
+  return worker!.evaluate(() =>
+    (
+      globalThis as unknown as {
+        chrome: { action: { getBadgeText(details: object): Promise<string> } };
+      }
+    ).chrome.action.getBadgeText({}),
+  );
+}
+
 /**
  * The JSON body of the next entry POST the popup sends. The fake stores
  * every picture at the same serving address, so this is where the
@@ -292,11 +304,13 @@ test('a failed initial lookup does not let Save blind-replace an existing entry'
   const query = new URLSearchParams({ url, title: 'ignored' });
   await popup.goto(`chrome-extension://${extensionId}/popup.html?${query}`);
 
-  // Initial lookup failed: an empty form is shown, with an error note —
-  // but Save is still armed.
+  // Initial lookup failed: an empty form is shown, with a note that Hrček
+  // cannot be reached (a network failure counts as unavailable now, so it
+  // is information, not an error) — but Save is still armed.
   await expect(popup.locator('.hrcek-header .aside')).toHaveCount(0);
   await expect(popup.locator('#notes')).toHaveValue('');
-  await expect(popup.locator('#status')).toHaveAttribute('data-kind', 'error');
+  await expect(popup.locator('#status')).toHaveAttribute('data-kind', 'info');
+  await expect(popup.locator('#status')).toContainText("Hrček can't be reached");
 
   // Saving now must re-check before writing, not blind-replace the held entry.
   await popup.click('#save');
@@ -790,4 +804,38 @@ test('says when your fields could not be read, instead of hiding them', async ({
   // Saving is still allowed: omitted fields are patched, not cleared.
   await popup.click('#save');
   await expect(popup.locator('#status')).toContainText('Saved.');
+});
+
+test('keeps a save made while Hrček is down, and sends it with the next save', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  await fetch(`${SERVER}/__outage`, { method: 'POST' });
+  const address = 'https://example.com/while-down';
+
+  const popup = await openPopup(context, extensionId, address, 'While down');
+  await expect(popup.locator('#status')).toContainText("Hrček can't be reached");
+  await expect(popup.locator('#save')).toHaveText('Save for later');
+  await popup.fill('#notes', 'written offline');
+  await popup.click('#save');
+  await expect(popup.locator('#status')).toContainText('Kept for later');
+  await expect.poll(() => badgeText(context)).toBe('1');
+
+  // Reopened while still down: the queued copy, not an empty form.
+  const again = await openPopup(context, extensionId, address, 'ignored');
+  await expect(again.locator('#notes')).toHaveValue('written offline');
+
+  await fetch(`${SERVER}/__restore`, { method: 'POST' });
+  const next = await openPopup(
+    context,
+    extensionId,
+    'https://example.com/after',
+    'After',
+  );
+  await next.click('#save');
+  await expect(next.locator('#status')).toContainText('Saved.');
+
+  await expect.poll(async () => (await heldEntry(address)).notes).toBe('written offline');
+  await expect.poll(() => badgeText(context)).toBe('');
 });

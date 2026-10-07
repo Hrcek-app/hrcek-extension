@@ -7,13 +7,26 @@ import { activateLocale } from '../../lib/i18n';
 import { harvestCandidates } from '../../lib/page/harvest-client';
 import { showToast } from '../../lib/page/toast-client';
 import { attachPicture, fetchPictureBytes, type PictureTrouble } from '../../lib/picture';
-import { loadExisting, submitSave } from '../../lib/save';
+import { loadExisting } from '../../lib/save';
+import { isUnavailable } from '../../lib/offline/unavailable';
+import {
+  openQueue,
+  QueueFullError,
+  type QueuedEntry,
+  type QueuedPicture,
+} from '../../lib/offline/queue';
+import { keepForLater, queuedPictureFor } from '../../lib/offline/keep';
+import { sendQueued } from '../../lib/offline/sync';
+import { planOpen, type LookupKind, type OpenPlan, type PopupNote } from './offline';
+import type { PictureChoice } from '../../lib/picture';
+import type { EntryOut } from '../../lib/api/types';
 import { isConfigured, loadSettings } from '../../lib/settings';
 import {
   emptyForm,
   entryToForm,
   formToSaveRequest,
   parseTags,
+  queuedToForm,
   type FormState,
 } from './form';
 import { createChipInput, type ChipInput } from './chips';
@@ -53,6 +66,14 @@ let candidates: Candidate[] = [];
 let held: HeldPicture | null = null;
 /** The object URL behind `held.src`, kept so it can be revoked. */
 let heldObjectUrl: string | null = null;
+/** Saves Hrček could not take yet, shared with the background. */
+const queue = openQueue();
+/** The copy of this address waiting to be synced, if any. */
+let queued: QueuedEntry | null = null;
+/** What the form was filled from; decides how Save sends it. */
+let source: OpenPlan['source'] = 'empty';
+/** True while Hrček is unavailable: Save keeps the entry for later. */
+let unavailable = false;
 
 /**
  * What to show the held picture with. The entry only carries an address,
@@ -178,6 +199,83 @@ function pictureTroubleText(trouble: PictureTrouble): string {
   }
 }
 
+/** The note for a plan, in words. Literals here, so extraction finds them. */
+function noteText(note: PopupNote): { kind: 'info' | 'error'; text: string } | null {
+  switch (note) {
+    case 'unavailable':
+      return {
+        kind: 'info',
+        text: i18n._(
+          "Hrček can't be reached. Saving keeps this entry here until it can.",
+        ),
+      };
+    case 'queued':
+      return { kind: 'info', text: i18n._('Waiting to be saved to Hrček.') };
+    case 'refused':
+      return {
+        kind: 'error',
+        text: i18n._('Hrček refused this entry: {reason}', {
+          reason: queued?.state.kind === 'refused' ? queued.state.message : '',
+        }),
+      };
+    case 'alsoQueued':
+      return {
+        kind: 'info',
+        text: i18n._(
+          'You also have an unsynced copy of this page — saving here replaces it.',
+        ),
+      };
+    case null:
+      return null;
+  }
+}
+
+/** The queued copy's picture, shown as the picture "it already has". */
+function heldFromQueued(picture: QueuedPicture): HeldPicture | null {
+  if (heldObjectUrl !== null) URL.revokeObjectURL(heldObjectUrl);
+  heldObjectUrl = null;
+  if (picture === null) return null;
+  if (picture.kind === 'url') return { src: picture.url };
+  heldObjectUrl = URL.createObjectURL(picture.blob);
+  return { src: heldObjectUrl };
+}
+
+/** After every save: the background sends whatever else is waiting. */
+function requestSync(): void {
+  void browser.runtime.sendMessage({ type: 'hrcek:sync' }).catch(() => undefined);
+}
+
+/** Puts the entry in the queue and says so; stays open if it cannot. */
+async function keepThisForLater(
+  choice: PictureChoice,
+  bytes: Blob | null,
+): Promise<void> {
+  const previous = source === 'queued' ? (queued?.picture ?? null) : null;
+  try {
+    await keepForLater(
+      queue,
+      settings!.serverUrl,
+      formToSaveRequest(collectForm()),
+      queuedPictureFor(choice, bytes, previous),
+    );
+  } catch (error) {
+    setStatus(
+      'error',
+      error instanceof QueueFullError
+        ? i18n._(
+            '100 entries are already waiting to be saved. Sync or delete some first.',
+          )
+        : i18n._('Something went wrong.'),
+    );
+    return;
+  }
+  requestSync();
+  await finish(
+    'success',
+    i18n._('Kept for later — it will be saved to Hrček once it can be reached.'),
+  );
+}
+
 function messageFor(error: unknown): string {
   // The server's message is translated and made for people — show it.
   if (error instanceof HrcekApiError) return error.message;
@@ -269,7 +367,7 @@ function renderUnauthorized(): void {
     .addEventListener('click', () => browser.runtime.openOptionsPage());
 }
 
-function renderForm(form: FormState, existing: boolean): void {
+function renderForm(form: FormState, existing: boolean, keepsPicture = existing): void {
   renderedFields = form.fields;
   app.innerHTML = `
     <div class="hrcek-header">
@@ -295,7 +393,7 @@ function renderForm(form: FormState, existing: boolean): void {
   document.querySelector<HTMLInputElement>('#title')!.value = form.title;
   document.querySelector<HTMLTextAreaElement>('#notes')!.value = form.notes;
   const pictureHost = document.querySelector<HTMLDivElement>('#picture')!;
-  const state = createPictureState({ candidates, held, existing });
+  const state = createPictureState({ candidates, held, existing: keepsPicture });
   pictures = state;
   const row = createPictureRow(pictureHost, state, () =>
     openPictureChooser(state, () => {
@@ -353,16 +451,21 @@ async function save(): Promise<void> {
     return;
   }
   setStatus('info', i18n._('Saving…'));
+  const choice = pictures?.choice() ?? { kind: 'unchanged' as const };
+  // Bytes first, from the page itself: Hrček being down does not stop
+  // that, and they are what a kept entry shows and later uploads.
+  const bytes = choice.kind === 'url' ? await fetchPictureBytes(choice.url) : null;
 
-  // The initial look-before-write failed (network blip, 5xx — not a
-  // confirmed "not held"). Posting now could blind-replace a held entry's
-  // notes/tags, so re-check before writing anything.
-  if (lookupFailed) {
+  // The look-before-write failed or found Hrček unavailable. Posting now
+  // could blind-replace a held entry, so look again first.
+  if (lookupFailed || unavailable) {
     try {
       const existing = pageUrl.length > 0 ? await loadExisting(client, pageUrl) : null;
+      lookupFailed = false;
+      unavailable = false;
       if (existing !== null) {
-        lookupFailed = false;
         await loadHeldPicture(existing.image);
+        source = 'server';
         renderForm(entryToForm(existing, definitions), true);
         setStatus(
           'error',
@@ -372,62 +475,56 @@ async function save(): Promise<void> {
         );
         return;
       }
-      lookupFailed = false;
     } catch (error) {
+      if (isUnavailable(error)) {
+        await keepThisForLater(choice, bytes);
+        return;
+      }
       setStatus('error', messageFor(error));
       return;
     }
   }
 
   try {
-    const choice = pictures?.choice() ?? { kind: 'unchanged' as const };
-    // Bytes first: the server refuses to fetch from private hosts, and a
-    // signed or referer-checked address will not come back for it.
-    const bytes = choice.kind === 'url' ? await fetchPictureBytes(choice.url) : null;
     const request = formToSaveRequest(collectForm());
-    const outcome = await submitSave(client, {
-      ...request,
-      // image_url only when the bytes could not be had. Omitted entirely
-      // otherwise, which is the documented way to leave a picture alone.
-      ...(choice.kind === 'url' && bytes === null ? { imageUrl: choice.url } : {}),
-    });
-    // The entry exists on the server now, regardless of what the picture
-    // does below — the tick reports the entry, not the picture. Caught,
-    // not merely voided: on Chrome a message with no live listener
-    // rejects, and an unhandled rejection is noise at best. This runs
-    // before the picture work precisely so that both of the exits below
-    // mark it held.
-    void browser.runtime
-      .sendMessage({ type: 'hrcek:saved', url: outcome.entry.url, held: true })
-      .catch(() => undefined);
-
-    // The picture's bytes live only in this popup — Chrome serialises
-    // messages as JSON, so they cannot be handed to the background to
-    // finish with. The popup waits the second or two instead.
+    // A queued copy carries its own picture, which "unchanged" keeps. For
+    // an entry from Hrček, "unchanged" sends no picture (it keeps its own)
+    // and "none" sends none and then deletes it, as before.
+    const picture = queuedPictureFor(
+      choice,
+      bytes,
+      source === 'queued' ? (queued?.picture ?? null) : null,
+    );
     if (choice.kind !== 'unchanged') setStatus('info', i18n._('Saving the picture…'));
-    // image_url is fetched inside the save's own transaction, so an
-    // address the server will not go to takes the save with it. submitSave
-    // posts again without the picture when that happens and reports the
-    // reason here — the entry stands either way.
-    const trouble =
-      outcome.pictureTrouble ??
-      (await attachPicture(client, outcome.entry, choice, bytes));
-    if (trouble !== null) {
-      // The entry stands; only the picture did not. Still a close: the
-      // entry saved, which is what was asked for.
+    const sent = await sendQueued(client, { request, picture });
+    // A POST cannot remove a picture; dropping the held one takes a DELETE.
+    if (choice.kind === 'none' && source !== 'queued') {
+      sent.trouble ??= await attachPicture(client, sent.entry, choice, null);
+    }
+    void browser.runtime
+      .sendMessage({ type: 'hrcek:saved', url: sent.entry.url, held: true })
+      .catch(() => undefined);
+    // This address is on Hrček now; any queued copy of it is spent.
+    if (queued !== null) await queue.remove(pageUrl).catch(() => undefined);
+    requestSync();
+    if (sent.trouble !== null) {
       await finish(
         'error',
         i18n._('Saved, but the picture could not be attached: {reason}', {
-          reason: pictureTroubleText(trouble),
+          reason: pictureTroubleText(sent.trouble),
         }),
       );
       return;
     }
     await finish(
       'success',
-      outcome.status === 'created' ? i18n._('Saved.') : i18n._('Updated.'),
+      sent.status === 'created' ? i18n._('Saved.') : i18n._('Updated.'),
     );
   } catch (error) {
+    if (isUnavailable(error)) {
+      await keepThisForLater(choice, bytes);
+      return;
+    }
     // The entry did not save. Stay open: this is the case where somebody
     // must do something about it.
     setStatus('error', messageFor(error));
@@ -470,24 +567,44 @@ async function main(): Promise<void> {
       return null;
     },
   );
+  queued = url.length > 0 ? await queue.get(url).catch(() => null) : null;
+  let lookup: LookupKind;
+  let existing: EntryOut | null = null;
   try {
-    const existing = url.length > 0 ? await loadExisting(client, url) : null;
-    if (existing !== null) {
-      await loadHeldPicture(existing.image);
-      renderForm(entryToForm(existing, definitions), true);
-    } else {
-      renderForm(emptyForm(url, title, definitions), false);
-    }
+    existing = url.length > 0 ? await loadExisting(client, url) : null;
+    lookup = existing !== null ? 'found' : 'not-found';
   } catch (error) {
     if (isAuthFailure(error)) {
       // Nothing on this form can succeed until there is a new token.
       renderUnauthorized();
       return;
     }
-    lookupFailed = true;
-    renderForm(emptyForm(url, title, definitions), false);
-    setStatus('error', messageFor(error));
+    if (!isUnavailable(error)) {
+      lookupFailed = true;
+      renderForm(emptyForm(url, title, definitions), false);
+      setStatus('error', messageFor(error));
+      return;
+    }
+    lookup = 'unavailable';
   }
+  const plan = planOpen(lookup, queued);
+  source = plan.source;
+  unavailable = lookup === 'unavailable';
+  if (plan.source === 'server') {
+    await loadHeldPicture(existing!.image);
+    renderForm(entryToForm(existing!, definitions), true);
+  } else if (plan.source === 'queued') {
+    held = heldFromQueued(queued!.picture);
+    renderForm(queuedToForm(queued!, definitions), false, true);
+  } else {
+    renderForm(emptyForm(url, title, definitions), false);
+  }
+  if (plan.laterButton) {
+    document.querySelector<HTMLButtonElement>('#save')!.textContent =
+      i18n._('Save for later');
+  }
+  const note = noteText(plan.note);
+  if (note !== null) setStatus(note.kind, note.text);
 }
 
 void main();
