@@ -75,10 +75,22 @@ browser.runtime.onMessage.addListener((message: unknown) => {
   return undefined;
 });
 
-void (async () => {
+/**
+ * Reads settings and mounts the page afresh in their language. Run at
+ * start and whenever settings change: every entry is judged against the
+ * server in settings, and a stale one would offer to replace on the
+ * wrong Hrček.
+ */
+async function load(): Promise<void> {
   settings = await loadSettings();
   locale = activateLocale(settings?.language ?? null);
   // Mounted only now, so the header speaks the chosen language.
   view = mount();
   await view.refresh();
-})();
+}
+
+browser.storage.local.onChanged.addListener((changes) => {
+  if ('settings' in changes) void load();
+});
+
+void load();
