@@ -7,6 +7,14 @@ msgstr ""
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
+#: src/entrypoints/popup/picture-row.ts
+msgid "Include picture"
+msgstr "Vključi sliko"
+
+#: src/entrypoints/popup/picture-row.ts
+msgid "Change"
+msgstr "Zamenjaj"
+
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}"
@@ -36,6 +44,10 @@ msgstr "Odstrani {tag}"
 #: src/entrypoints/popup/main.ts
 msgid "Could not reach {server}."
 msgstr "Strežnika {server} ni bilo mogoče doseči."
+
+#: src/entrypoints/popup/main.ts
+msgid "The picture could not be attached."
+msgstr "Slike ni bilo mogoče priložiti."
 
 #: src/entrypoints/options/main.ts
 #: src/entrypoints/popup/main.ts
@@ -113,10 +125,6 @@ msgid "Saving the picture…"
 msgstr "Shranjujem sliko…"
 
 #: src/entrypoints/popup/main.ts
-msgid "The picture could not be attached."
-msgstr "Slike ni bilo mogoče priložiti."
-
-#: src/entrypoints/popup/main.ts
 msgid "Saved, but the picture could not be attached: {reason}"
 msgstr "Shranjeno, slike pa ni bilo mogoče priložiti: {reason}"
 
@@ -134,6 +142,7 @@ msgid "No picture"
 msgstr "Brez slike"
 
 #: src/entrypoints/popup/picker.ts
+#: src/entrypoints/popup/picture-row.ts
 msgid "It has a picture that cannot be shown here"
 msgstr "Ima sliko, ki je tu ni mogoče pokazati"
 
