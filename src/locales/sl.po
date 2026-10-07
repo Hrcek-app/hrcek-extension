@@ -7,13 +7,33 @@ msgstr ""
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
-#: src/entrypoints/background.ts
-msgid "Waiting to sync ({count})…"
-msgstr "Čaka na sinhronizacijo ({count})…"
+#: src/entrypoints/popup/main.ts
+msgid "Hrček can't be reached. Saving keeps this entry here until it can."
+msgstr "Hrček ni dosegljiv. Ob shranjevanju vnos ostane tukaj, dokler ne bo."
 
-#: src/entrypoints/background.ts
-msgid "Sync now"
-msgstr "Sinhroniziraj zdaj"
+#: src/entrypoints/popup/main.ts
+msgid "Waiting to be saved to Hrček."
+msgstr "Čaka, da se shrani na Hrček."
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček refused this entry: {reason}"
+msgstr "Hrček je ta vnos zavrnil: {reason}"
+
+#: src/entrypoints/popup/main.ts
+msgid "You also have an unsynced copy of this page — saving here replaces it."
+msgstr "Imate tudi nesinhronizirano kopijo te strani — shranjevanje tukaj jo nadomesti."
+
+#: src/entrypoints/popup/main.ts
+msgid "100 entries are already waiting to be saved. Sync or delete some first."
+msgstr "Na shranjevanje že čaka 100 vnosov. Najprej jih sinhronizirajte ali nekaj izbrišite."
+
+#: src/entrypoints/popup/main.ts
+msgid "Kept for later — it will be saved to Hrček once it can be reached."
+msgstr "Shranjeno za pozneje — na Hrček bo shranjeno, ko bo dosegljiv."
+
+#: src/entrypoints/popup/main.ts
+msgid "Save for later"
+msgstr "Shrani za pozneje"
 
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
@@ -31,6 +51,14 @@ msgstr "Hrček: prijavite se znova"
 #: src/entrypoints/background.ts
 msgid "Hrček"
 msgstr "Hrček"
+
+#: src/entrypoints/background.ts
+msgid "Waiting to sync ({count})…"
+msgstr "Čaka na sinhronizacijo ({count})…"
+
+#: src/entrypoints/background.ts
+msgid "Sync now"
+msgstr "Sinhroniziraj zdaj"
 
 #: src/entrypoints/popup/chips.ts
 msgid "Add a tag"

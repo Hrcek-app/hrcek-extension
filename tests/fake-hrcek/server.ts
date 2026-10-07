@@ -116,6 +116,7 @@ function normalizeNumber(value: string): string {
 export async function startFakeHrcek(port = 0): Promise<FakeHrcek> {
   let entries = new Map<string, EntryOut>();
   let nextId = 1;
+  let outage = false;
   let nextTokenId = 1;
   let clock = 0;
 
@@ -233,9 +234,29 @@ export async function startFakeHrcek(port = 0): Promise<FakeHrcek> {
       const requestUrl = new URL(req.url ?? '/', 'http://localhost');
       const route = `${req.method} ${requestUrl.pathname}`;
 
+      if (route === 'POST /__outage') {
+        outage = true;
+        res.writeHead(204).end();
+        return;
+      }
+      if (route === 'POST /__restore') {
+        outage = false;
+        res.writeHead(204).end();
+        return;
+      }
+      // What a reverse proxy says in front of a stopped Hrček: an HTML
+      // page, not the error envelope — so the client sees it unparseable.
+      if (outage && !requestUrl.pathname.startsWith('/__')) {
+        res
+          .writeHead(503, { 'Content-Type': 'text/html' })
+          .end('<h1>503 Service Unavailable</h1>');
+        return;
+      }
+
       if (route === 'POST /__reset') {
         entries = new Map();
         nextId = 1;
+        outage = false;
         res.writeHead(204).end();
         return;
       }
@@ -517,6 +538,7 @@ export async function startFakeHrcek(port = 0): Promise<FakeHrcek> {
     reset() {
       entries = new Map();
       nextId = 1;
+      outage = false;
       nextTokenId = 1;
     },
     close() {
