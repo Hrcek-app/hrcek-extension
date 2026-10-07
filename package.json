@@ -19,6 +19,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "refresh-schema": "sh scripts/refresh-schema.sh",
+    "i18n:extract": "lingui extract --clean",
     "postinstall": "wxt prepare",
     "prepare": "git config core.hooksPath .githooks"
   },

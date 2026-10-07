@@ -7,6 +7,14 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: src/entrypoints/popup/picture-row.ts
+msgid "Include picture"
+msgstr "Include picture"
+
+#: src/entrypoints/popup/picture-row.ts
+msgid "Change"
+msgstr "Change"
+
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr ""
@@ -36,6 +44,10 @@ msgstr "Remove {tag}"
 #: src/entrypoints/popup/main.ts
 msgid "Could not reach {server}."
 msgstr "Could not reach {server}."
+
+#: src/entrypoints/popup/main.ts
+msgid "The picture could not be attached."
+msgstr "The picture could not be attached."
 
 #: src/entrypoints/options/main.ts
 #: src/entrypoints/popup/main.ts
@@ -113,10 +125,6 @@ msgid "Saving the picture…"
 msgstr "Saving the picture…"
 
 #: src/entrypoints/popup/main.ts
-msgid "The picture could not be attached."
-msgstr "The picture could not be attached."
-
-#: src/entrypoints/popup/main.ts
 msgid "Saved, but the picture could not be attached: {reason}"
 msgstr "Saved, but the picture could not be attached: {reason}"
 
@@ -134,6 +142,7 @@ msgid "No picture"
 msgstr "No picture"
 
 #: src/entrypoints/popup/picker.ts
+#: src/entrypoints/popup/picture-row.ts
 msgid "It has a picture that cannot be shown here"
 msgstr "It has a picture that cannot be shown here"
 
