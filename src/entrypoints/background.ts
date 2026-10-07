@@ -191,8 +191,7 @@ export default defineBackground(() => {
   browser.contextMenus.onClicked.addListener((info) => {
     if (info.menuItemId === MENU_PENDING) {
       void browser.tabs.create({
-        // The page arrives with a later task; until then WXT's typed paths do not know it.
-        url: browser.runtime.getURL('/pending.html' as never),
+        url: browser.runtime.getURL('/pending.html'),
       });
     } else if (info.menuItemId === MENU_SYNC) {
       void runner.sync();
