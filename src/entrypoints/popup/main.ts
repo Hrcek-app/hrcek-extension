@@ -507,9 +507,10 @@ async function save(): Promise<void> {
     void browser.runtime
       .sendMessage({ type: 'hrcek:saved', url: sent.entry.url, held: true })
       .catch(() => undefined);
-    // This address is on Hrček now; any queued copy of it is spent.
+    // This address is on Hrček now; the queued copy shown is spent, but
+    // not a newer one another popup window kept meanwhile.
     if (queued !== null && queuedShown)
-      await queue.remove(pageUrl).catch(() => undefined);
+      await queue.remove(pageUrl, queued.savedAt).catch(() => undefined);
     requestSync();
     if (sent.trouble !== null) {
       await finish(
