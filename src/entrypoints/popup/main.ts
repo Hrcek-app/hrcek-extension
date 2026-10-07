@@ -17,7 +17,9 @@ import {
   type FormState,
 } from './form';
 import { createChipInput, type ChipInput } from './chips';
-import { createPicker, type HeldPicture, type Picker } from './picker';
+import { createPictureState, type HeldPicture, type PictureState } from './picture-state';
+import { createPictureRow } from './picture-row';
+import { openPictureChooser } from './picture-overlay';
 import type { Settings } from '../../lib/settings';
 import type { FieldInput } from '../../lib/fields';
 import type { FieldOut, ImageOut } from '../../lib/api/types';
@@ -43,8 +45,8 @@ let definitions: FieldOut[] | null = null;
 let fieldsFailed = false;
 /** The mounted tags chip input; remounted by every renderForm() call. */
 let chips: ChipInput | null = null;
-/** The mounted picture picker; remounted by every renderForm() call. */
-let picker: Picker | null = null;
+/** What the picture row and chooser decided; rebuilt by every renderForm() call. */
+let pictures: PictureState | null = null;
 /** Harvested once in main(); what the page itself offers. */
 let candidates: Candidate[] = [];
 /** The picture the entry already holds, if any, ready to be shown. */
@@ -58,7 +60,7 @@ let heldObjectUrl: string | null = null;
  * cannot present a bearer token, and this extension holds no cookies —
  * so the bytes are fetched here and handed over as an object URL.
  *
- * A fetch that fails is not worth an error: the tile falls back to saying
+ * A fetch that fails is not worth an error: the row falls back to saying
  * the entry has a picture without showing it, and the entry is otherwise
  * untouched.
  */
@@ -118,10 +120,12 @@ async function targetTabId(): Promise<number | undefined> {
  */
 function seededCandidates(): Candidate[] | null {
   if (import.meta.env.MODE === 'e2e') {
-    const seeded = new URLSearchParams(window.location.search).get('candidate');
-    // Shaped like a head declaration, which is what a page most often
-    // offers: no dimensions to be had until something loads it.
-    if (seeded !== null) return [{ url: seeded, width: 0, height: 0, fromHead: true }];
+    const seeded = new URLSearchParams(window.location.search).getAll('candidate');
+    // Shaped like head declarations, which is what a page most often
+    // offers: no dimensions to be had until something loads them.
+    if (seeded.length > 0) {
+      return seeded.map((url) => ({ url, width: 0, height: 0, fromHead: true }));
+    }
   }
   return null;
 }
@@ -291,9 +295,17 @@ function renderForm(form: FormState, existing: boolean): void {
   document.querySelector<HTMLInputElement>('#title')!.value = form.title;
   document.querySelector<HTMLTextAreaElement>('#notes')!.value = form.notes;
   const pictureHost = document.querySelector<HTMLDivElement>('#picture')!;
-  picker = createPicker(pictureHost, { candidates, held, existing });
+  const state = createPictureState({ candidates, held, existing });
+  pictures = state;
+  const row = createPictureRow(pictureHost, state, () =>
+    openPictureChooser(state, () => {
+      row.refresh();
+      // Back where they left from.
+      document.querySelector<HTMLButtonElement>('#change-picture')?.focus();
+    }),
+  );
   // The row is absent, not empty, when the page offered nothing.
-  if (pictureHost.innerHTML === '') {
+  if (state.items.length === 0) {
     document.querySelector<HTMLDivElement>('#picture-field')!.hidden = true;
   }
   chips = createChipInput(document.querySelector<HTMLDivElement>('#tags')!, {
@@ -308,18 +320,6 @@ function renderForm(form: FormState, existing: boolean): void {
   });
 
   const entryForm = document.querySelector<HTMLFormElement>('#entry-form')!;
-  // Attached here, once per rendered form, rather than inside the picker:
-  // the picker redraws itself on every tile click, and a listener added
-  // per redraw would pile up. The form is rebuilt wholesale by each
-  // renderForm, so this one is discarded with it.
-  //
-  // focusin reaches this listener only when the focus landed inside the
-  // form, so it says precisely "attention moved to another field".
-  entryForm.addEventListener('focusin', (event) => {
-    const target = event.target;
-    if (target instanceof Node && pictureHost.contains(target)) return;
-    picker?.collapse();
-  });
   entryForm.addEventListener('submit', (event) => {
     event.preventDefault();
     void save();
@@ -348,11 +348,6 @@ function collectForm(): FormState {
 }
 
 async function save(): Promise<void> {
-  // Said here rather than on the form's submit event so that both ways in
-  // — the button and Enter in the tag field — put the preview away. Not
-  // every browser focuses a button that was clicked, so focusin alone
-  // would miss it.
-  picker?.collapse();
   if (!settings || !client) {
     setStatus('error', i18n._('Settings not available.'));
     return;
@@ -385,7 +380,7 @@ async function save(): Promise<void> {
   }
 
   try {
-    const choice = picker?.choice() ?? { kind: 'unchanged' as const };
+    const choice = pictures?.choice() ?? { kind: 'unchanged' as const };
     // Bytes first: the server refuses to fetch from private hosts, and a
     // signed or referer-checked address will not come back for it.
     const bytes = choice.kind === 'url' ? await fetchPictureBytes(choice.url) : null;

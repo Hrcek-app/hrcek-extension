@@ -42,6 +42,49 @@ async function heldEntry(address: string) {
   return response.json();
 }
 
+/**
+ * The JSON body of the next entry POST the popup sends. The fake stores
+ * every picture at the same serving address, so this is where the
+ * address actually chosen can be seen.
+ */
+function nextEntryPost(popup: Page): Promise<Record<string, unknown>> {
+  return popup
+    .waitForRequest(
+      (request) => request.method() === 'POST' && request.url().endsWith('/api/entries/'),
+    )
+    .then((request) => request.postDataJSON() as Record<string, unknown>);
+}
+
+/**
+ * Opens the popup seeded with several page pictures. `<img>` loads get a
+ * real picture; the popup's own fetch of the bytes is refused, as it is
+ * for any picture on a host the extension cannot read — so the save
+ * carries `image_url` and the choice is visible on the wire.
+ */
+async function openPopupWithPictures(
+  context: BrowserContext,
+  extensionId: string,
+  url: string,
+  pictures: string[],
+): Promise<Page> {
+  const popup = await context.newPage();
+  await popup.route('https://pictures.example.com/**', (route) =>
+    route.request().resourceType() === 'image'
+      ? route.fulfill({ path: 'src/public/icon/128.png', contentType: 'image/png' })
+      : route.abort('failed'),
+  );
+  const query = new URLSearchParams({ url, title: 'Pictures' });
+  for (const picture of pictures) query.append('candidate', picture);
+  await popup.goto(`chrome-extension://${extensionId}/popup.html?${query}`);
+  return popup;
+}
+
+const PICTURES = [
+  'https://pictures.example.com/one.jpg',
+  'https://pictures.example.com/two.jpg',
+  'https://pictures.example.com/three.jpg',
+];
+
 async function openPopup(
   context: BrowserContext,
   extensionId: string,
@@ -367,7 +410,7 @@ test('shows the picture an entry already holds, fetched with the token', async (
   // popup fetches the bytes with the token and shows those. A plain
   // <img src> on that address would render broken here.
   await expect(popup.locator('#picture-field')).toBeVisible();
-  const held = popup.locator('.tile.held img');
+  const held = popup.locator('img.picture-preview');
   await expect(held).toHaveAttribute('src', /^blob:/);
   // It decoded, so those really are the picture's bytes.
   await expect
@@ -382,7 +425,7 @@ test('shows the picture an entry already holds, fetched with the token', async (
   expect(entry.image).not.toBeNull();
 });
 
-test('previews pictures while you click through them, and puts the preview away when you move on', async ({
+test('removes the picture an entry holds when Include picture is unticked', async ({
   context,
   extensionId,
 }) => {
@@ -402,36 +445,89 @@ test('previews pictures while you click through them, and puts the preview away 
   });
 
   const popup = await openPopup(context, extensionId, address, 'ignored');
-  const hero = popup.locator('.hero');
 
-  // A picture already held is a choice already made: collapsed on open.
-  await expect(popup.locator('.tile.held')).toBeVisible();
-  await expect(hero).toHaveCount(0);
+  // A held picture is a choice already made: ticked, shown, and no Change
+  // when the page offers nothing else.
+  await expect(popup.locator('#include-picture')).toBeChecked();
+  await expect(popup.locator('img.picture-preview')).toHaveAttribute('src', /^blob:/);
+  await expect(popup.locator('#change-picture')).toHaveCount(0);
 
-  await popup.click('.expand');
-  await expect(hero).toBeVisible();
+  // A change of mind and back keeps it…
+  await popup.uncheck('#include-picture');
+  await popup.check('#include-picture');
+  await expect(popup.locator('img.picture-preview')).toHaveAttribute('src', /^blob:/);
 
-  // Clicking through the tiles is looking, not leaving — the preview must
-  // survive the click that asked for it, or there is no way to judge a
-  // picture at all.
-  await popup.click('.tile.none');
-  await expect(popup.locator('.hero.empty')).toBeVisible();
-  await popup.click('.tile.held');
-  await expect(popup.locator('img.hero')).toHaveAttribute('src', /^blob:/);
-
-  // Typing a tag and then moving on must do both things: commit the tag,
-  // and put the preview away.
-  await popup.locator('.chip-input').fill('reading');
-  await popup.locator('#title').focus();
-  await expect(popup.locator('.chip')).toHaveCount(1);
-  await expect(hero).toHaveCount(0);
-
-  // And the picture the last click chose is the one that is kept.
+  // …and unticking for good removes it.
+  await popup.uncheck('#include-picture');
   await popup.click('#save');
   await expect(popup.locator('#status')).toContainText('Updated.');
-  const entry = await heldEntry(address);
-  expect(entry.image).not.toBeNull();
-  expect(entry.tags).toEqual(['reading']);
+  expect((await heldEntry(address)).image).toBeNull();
+});
+
+test('chooses another picture in the chooser and saves that one', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  const popup = await openPopupWithPictures(
+    context,
+    extensionId,
+    'https://example.com/gallery',
+    PICTURES,
+  );
+
+  // Proposed without being asked: the page's first picture, ticked.
+  await expect(popup.locator('#include-picture')).toBeChecked();
+  await expect(popup.locator('img.picture-preview')).toHaveAttribute('src', PICTURES[0]!);
+
+  await popup.click('#change-picture');
+  await expect(popup.locator('.chooser')).toBeVisible();
+  await expect(popup.locator('.chooser-caption')).toHaveText('Selected');
+  await popup.locator('.chooser-tile').nth(1).click();
+  await expect(popup.locator('img.chooser-image')).toHaveAttribute('src', PICTURES[1]!);
+  await popup.click('.chooser-close');
+  await expect(popup.locator('.chooser')).toHaveCount(0);
+  await expect(popup.locator('img.picture-preview')).toHaveAttribute('src', PICTURES[1]!);
+
+  const posted = nextEntryPost(popup);
+  await popup.click('#save');
+  expect((await posted)['image_url']).toBe(PICTURES[1]);
+  await expect(popup.locator('#status')).toContainText('Saved.');
+});
+
+test('a click on the large picture confirms it', async ({ context, extensionId }) => {
+  await configureToken(context, extensionId);
+  const popup = await openPopupWithPictures(
+    context,
+    extensionId,
+    'https://example.com/gallery-click',
+    PICTURES,
+  );
+
+  await popup.click('#change-picture');
+  await popup.locator('.chooser-tile').nth(2).click();
+  await popup.click('.chooser-preview');
+  await expect(popup.locator('.chooser')).toHaveCount(0);
+
+  const posted = nextEntryPost(popup);
+  await popup.click('#save');
+  expect((await posted)['image_url']).toBe(PICTURES[2]);
+});
+
+test('unticking Include picture saves without one', async ({ context, extensionId }) => {
+  await configureToken(context, extensionId);
+  const address = 'https://example.com/plain';
+  const popup = await openPopupWithPictures(context, extensionId, address, PICTURES);
+
+  await popup.uncheck('#include-picture');
+  await expect(popup.locator('.picture-preview')).toHaveCount(0);
+  await expect(popup.locator('#change-picture')).toHaveCount(0);
+
+  const posted = nextEntryPost(popup);
+  await popup.click('#save');
+  expect(await posted).not.toHaveProperty('image_url');
+  await expect(popup.locator('#status')).toContainText('Saved.');
+  expect((await heldEntry(address)).image).toBeNull();
 });
 
 test('keeps the tags and fields an entry holds when only the title changes', async ({

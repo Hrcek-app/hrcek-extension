@@ -7,30 +7,6 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Choose a picture"
-msgstr "Choose a picture"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Use this picture"
-msgstr "Use this picture"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Selected"
-msgstr "Selected"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Picture {number} of {total}"
-msgstr "Picture {number} of {total}"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "current"
-msgstr "current"
-
-#: src/entrypoints/popup/picture-overlay.ts
-msgid "Close"
-msgstr "Close"
-
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr ""
@@ -153,50 +129,46 @@ msgstr ""
 msgid "Updated."
 msgstr "Updated."
 
-#: src/entrypoints/popup/picker.ts
-msgid "No picture"
-msgstr "No picture"
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Choose a picture"
+msgstr "Choose a picture"
 
-#: src/entrypoints/popup/picker.ts
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Use this picture"
+msgstr "Use this picture"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Selected"
+msgstr "Selected"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Earlier pictures"
+msgstr "Earlier pictures"
+
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "More pictures"
+msgstr "More pictures"
+
 #: src/entrypoints/popup/picture-overlay.ts
 #: src/entrypoints/popup/picture-row.ts
 msgid "It has a picture that cannot be shown here"
 msgstr "It has a picture that cannot be shown here"
 
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
 msgid "The picture it has"
 msgstr "The picture it has"
 
-#: src/entrypoints/popup/picker.ts
-msgid "Declared by the page"
-msgstr "Declared by the page"
-
-#: src/entrypoints/popup/picker.ts
-msgid "From the page"
-msgstr "From the page"
-
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
-msgid "Earlier pictures"
-msgstr "Earlier pictures"
+msgid "Picture {number} of {total}"
+msgstr "Picture {number} of {total}"
 
-#: src/entrypoints/popup/picker.ts
 #: src/entrypoints/popup/picture-overlay.ts
-msgid "More pictures"
-msgstr "More pictures"
+msgid "current"
+msgstr "current"
 
-#: src/entrypoints/popup/picker.ts
-msgid "Show the picture larger"
-msgstr "Show the picture larger"
-
-#: src/entrypoints/popup/picker.ts
-msgid "kept"
-msgstr "kept"
-
-#: src/entrypoints/popup/picker.ts
-msgid "none"
-msgstr "none"
+#: src/entrypoints/popup/picture-overlay.ts
+msgid "Close"
+msgstr "Close"
 
 #: src/entrypoints/popup/picture-row.ts
 msgid "Include picture"
