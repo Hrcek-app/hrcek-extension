@@ -326,6 +326,76 @@ test('a failed initial lookup does not let Save blind-replace an existing entry'
   await expect(popup.locator('#notes')).toHaveValue('precious notes');
 });
 
+test('a lookup that fails with a server error does not let Save blind-replace an existing entry', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  const url = 'https://example.com/boom';
+  const setup = await openPopup(context, extensionId, url, 'Boom');
+  await setup.fill('#notes', 'precious notes');
+  await setup.click('#save');
+  await expect(setup.locator('#status')).toContainText('Saved.');
+  await setup.close();
+
+  const popup = await context.newPage();
+  let lookupCalls = 0;
+  await popup.route('**/api/entries/lookup', async (route) => {
+    lookupCalls += 1;
+    if (lookupCalls === 1) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'HRC-CORE-9999', message: 'Boom.', details: {} },
+        }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+  const query = new URLSearchParams({ url, title: 'ignored' });
+  await popup.goto(`chrome-extension://${extensionId}/popup.html?${query}`);
+
+  await expect(popup.locator('#status')).toHaveAttribute('data-kind', 'error');
+  await expect(popup.locator('#save')).toHaveText('Save');
+  await expect(popup.locator('#notes')).toHaveValue('');
+
+  await popup.click('#save');
+  await expect(popup.locator('.hrcek-header .aside')).toBeVisible();
+  await expect(popup.locator('#notes')).toHaveValue('precious notes');
+  await expect(popup.locator('#status')).not.toContainText('Saved.');
+  await expect(popup.locator('#status')).not.toContainText('Updated.');
+});
+
+test('shows the queued copy, and keeps it, when the lookup fails with a server error', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  await fetch(`${SERVER}/__outage`, { method: 'POST' });
+  const address = 'https://example.com/queued-boom';
+  const first = await openPopup(context, extensionId, address, 'Queued');
+  await first.fill('#notes', 'written offline');
+  await first.click('#save');
+  await expect(first.locator('#status')).toContainText('Kept for later');
+
+  const popup = await context.newPage();
+  await popup.route('**/api/entries/lookup', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: { code: 'HRC-CORE-9999', message: 'Boom.', details: {} },
+      }),
+    }),
+  );
+  const query = new URLSearchParams({ url: address, title: 'ignored' });
+  await popup.goto(`chrome-extension://${extensionId}/popup.html?${query}`);
+  await expect(popup.locator('#status')).toHaveAttribute('data-kind', 'error');
+  await expect(popup.locator('#notes')).toHaveValue('written offline');
+});
+
 test('mints a token from credentials, then saves with it', async ({
   context,
   extensionId,
