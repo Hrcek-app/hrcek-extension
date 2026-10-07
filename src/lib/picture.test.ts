@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { attachPicture, fetchPictureBytes, MAX_PICTURE_BYTES } from './picture';
-import { HrcekApiError } from './api/errors';
+import { HrcekApiError, HrcekNetworkError } from './api/errors';
 import type { EntryOut } from './api/types';
 
 const ENTRY: EntryOut = {
@@ -14,13 +14,6 @@ const ENTRY: EntryOut = {
   created_at: '2026-09-13T12:28:12.937Z',
   updated_at: '2026-09-13T12:28:12.937Z',
 };
-
-/**
- * What the caller would say in the interface language. Deliberately not
- * English: the point of the parameter is that this file does not choose
- * the words.
- */
-const FALLBACK = 'Slike ni bilo mogoče priložiti.';
 
 function blob(size: number, type = 'image/jpeg') {
   return new Blob([new Uint8Array(size)], { type });
@@ -65,7 +58,7 @@ describe('attachPicture', () => {
   it('does nothing at all when the picture did not change', async () => {
     const client = { uploadImage: vi.fn(), deleteImage: vi.fn() };
     expect(
-      await attachPicture(client as never, ENTRY, { kind: 'unchanged' }, null, FALLBACK),
+      await attachPicture(client as never, ENTRY, { kind: 'unchanged' }, null),
     ).toBeNull();
     expect(client.uploadImage).not.toHaveBeenCalled();
     expect(client.deleteImage).not.toHaveBeenCalled();
@@ -80,7 +73,6 @@ describe('attachPicture', () => {
         ENTRY,
         { kind: 'url', url: 'https://cdn.test/a.jpg' },
         bytes,
-        FALLBACK,
       ),
     ).toBeNull();
     expect(client.uploadImage).toHaveBeenCalledWith(7, bytes, 'a.jpg');
@@ -96,7 +88,6 @@ describe('attachPicture', () => {
         ENTRY,
         { kind: 'url', url: 'https://cdn.test/a.jpg' },
         null,
-        FALLBACK,
       ),
     ).toBeNull();
     expect(client.uploadImage).not.toHaveBeenCalled();
@@ -105,15 +96,13 @@ describe('attachPicture', () => {
   it('deletes the picture when none was chosen and the entry had one', async () => {
     const client = { uploadImage: vi.fn(), deleteImage: vi.fn(async () => undefined) };
     const held = { ...ENTRY, image: { url: '/entries/7/image/', width: 12, height: 8 } };
-    expect(
-      await attachPicture(client as never, held, { kind: 'none' }, null, FALLBACK),
-    ).toBeNull();
+    expect(await attachPicture(client as never, held, { kind: 'none' }, null)).toBeNull();
     expect(client.deleteImage).toHaveBeenCalledWith(7);
   });
 
   it('does not delete when there was nothing to delete', async () => {
     const client = { uploadImage: vi.fn(), deleteImage: vi.fn() };
-    await attachPicture(client as never, ENTRY, { kind: 'none' }, null, FALLBACK);
+    await attachPicture(client as never, ENTRY, { kind: 'none' }, null);
     expect(client.deleteImage).not.toHaveBeenCalled();
   });
 
@@ -129,34 +118,59 @@ describe('attachPicture', () => {
       }),
       deleteImage: vi.fn(),
     };
-    const message = await attachPicture(
+    const trouble = await attachPicture(
       client as never,
       ENTRY,
       { kind: 'url', url: 'https://cdn.test/a.jpg' },
       blob(32),
-      FALLBACK,
     );
-    expect(message).toBe('That is not an image Hrček can read.');
+    // The server's message travels, because the server already translated
+    // it for the person reading.
+    expect(trouble).toEqual({
+      kind: 'refused',
+      message: 'That is not an image Hrček can read.',
+    });
   });
 
-  it('says what the caller told it to say for a failure that is neither', async () => {
+  it('names an unreachable server rather than quoting its own English', async () => {
+    // HrcekNetworkError's text is written by this client, in English, and
+    // it ends up inside a sentence the popup has already translated. Said
+    // as a shape, the popup can say it in the language it is speaking —
+    // quoting it produced "Shranjeno, slike pa ni bilo mogoče priložiti:
+    // Could not reach https://…".
+    const client = {
+      uploadImage: vi.fn(async () => {
+        throw new HrcekNetworkError('Could not reach https://hrcek.test.');
+      }),
+      deleteImage: vi.fn(),
+    };
+    const trouble = await attachPicture(
+      client as never,
+      ENTRY,
+      { kind: 'url', url: 'https://cdn.test/a.jpg' },
+      blob(32),
+    );
+
+    expect(trouble).toEqual({ kind: 'unreachable' });
+  });
+
+  it('quotes nothing at all for a failure that is neither', async () => {
     // A raw runtime message ("Failed to fetch", a bug's TypeError) is
-    // developer-facing and untranslated — show the caller's fallback
-    // instead, which is the one that ends up inside the translated
-    // "Saved, but the picture could not be attached: …" sentence.
+    // developer-facing and untranslated. The caller says something of its
+    // own instead.
     const client = {
       uploadImage: vi.fn(async () => {
         throw new Error('unexpected');
       }),
       deleteImage: vi.fn(),
     };
-    const message = await attachPicture(
+    const trouble = await attachPicture(
       client as never,
       ENTRY,
       { kind: 'url', url: 'https://cdn.test/a.jpg' },
       blob(32),
-      FALLBACK,
     );
-    expect(message).toBe(FALLBACK);
+
+    expect(trouble).toEqual({ kind: 'unknown' });
   });
 });

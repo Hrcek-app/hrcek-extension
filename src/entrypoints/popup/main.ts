@@ -6,7 +6,7 @@ import { i18n } from '@lingui/core';
 import { activateLocale } from '../../lib/i18n';
 import { harvestCandidates } from '../../lib/page/harvest-client';
 import { showToast } from '../../lib/page/toast-client';
-import { attachPicture, fetchPictureBytes } from '../../lib/picture';
+import { attachPicture, fetchPictureBytes, type PictureTrouble } from '../../lib/picture';
 import { loadExisting, submitSave } from '../../lib/save';
 import { isConfigured, loadSettings } from '../../lib/settings';
 import {
@@ -154,6 +154,24 @@ function closeSelf(): void {
     return;
   }
   window.close();
+}
+
+/**
+ * The reason a picture did not attach, in words. This lands inside an
+ * already-translated sentence, so a message the client wrote in English
+ * — "Could not reach …" — must be said again here rather than passed
+ * through, or one half of that sentence comes out in the wrong language.
+ */
+function pictureTroubleText(trouble: PictureTrouble): string {
+  switch (trouble.kind) {
+    // The server's own words, already in the reader's language.
+    case 'refused':
+      return trouble.message;
+    case 'unreachable':
+      return i18n._('Could not reach {server}.', { server: settings?.serverUrl ?? '' });
+    case 'unknown':
+      return i18n._('The picture could not be attached.');
+  }
 }
 
 function messageFor(error: unknown): string {
@@ -398,20 +416,14 @@ async function save(): Promise<void> {
     // reason here — the entry stands either way.
     const trouble =
       outcome.pictureTrouble ??
-      (await attachPicture(
-        client,
-        outcome.entry,
-        choice,
-        bytes,
-        i18n._('The picture could not be attached.'),
-      ));
+      (await attachPicture(client, outcome.entry, choice, bytes));
     if (trouble !== null) {
       // The entry stands; only the picture did not. Still a close: the
       // entry saved, which is what was asked for.
       await finish(
         'error',
         i18n._('Saved, but the picture could not be attached: {reason}', {
-          reason: trouble,
+          reason: pictureTroubleText(trouble),
         }),
       );
       return;

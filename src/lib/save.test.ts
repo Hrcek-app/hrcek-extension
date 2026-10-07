@@ -131,7 +131,10 @@ describe('submitSave', () => {
 
     expect(outcome.status).toBe('created');
     // The server's own words, shown to the person and never matched on.
-    expect(outcome.pictureTrouble).toBe('That image could not be fetched.');
+    expect(outcome.pictureTrouble).toEqual({
+      kind: 'refused',
+      message: 'That image could not be fetched.',
+    });
     expect(saveEntry).toHaveBeenCalledTimes(2);
     expect(saveEntry.mock.calls[0]![0].image_url).toBe(
       'https://cdn.example.com/watch.jpg',
