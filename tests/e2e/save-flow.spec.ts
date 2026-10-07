@@ -66,11 +66,15 @@ async function openPopupWithPictures(
   extensionId: string,
   url: string,
   pictures: string[],
+  /** What every `<img>` gets; a square icon unless a test needs a shape. */
+  picture: { body: string; contentType: string } | null = null,
 ): Promise<Page> {
   const popup = await context.newPage();
   await popup.route('https://pictures.example.com/**', (route) =>
     route.request().resourceType() === 'image'
-      ? route.fulfill({ path: 'src/public/icon/128.png', contentType: 'image/png' })
+      ? route.fulfill(
+          picture ?? { path: 'src/public/icon/128.png', contentType: 'image/png' },
+        )
       : route.abort('failed'),
   );
   const query = new URLSearchParams({ url, title: 'Pictures' });
@@ -512,6 +516,69 @@ test('a click on the large picture confirms it', async ({ context, extensionId }
   const posted = nextEntryPost(popup);
   await popup.click('#save');
   expect((await posted)['image_url']).toBe(PICTURES[2]);
+});
+
+test('keeps Change to the right of even a very wide picture, inside the popup', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  // A 20:1 panorama: the one shape that would push Change off the row if
+  // the picture were allowed the full width.
+  const panorama = {
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="100"><rect width="2000" height="100" fill="#888"/></svg>',
+    contentType: 'image/svg+xml',
+  };
+  const popup = await openPopupWithPictures(
+    context,
+    extensionId,
+    'https://example.com/panorama',
+    PICTURES,
+    panorama,
+  );
+
+  const image = popup.locator('img.picture-preview');
+  await expect
+    .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
+    .toBeGreaterThan(0);
+  const picture = (await image.boundingBox())!;
+  const change = (await popup.locator('#change-picture').boundingBox())!;
+  const form = (await popup.locator('#entry-form').boundingBox())!;
+
+  // No longer a fixed box: the picture takes its own proportions.
+  expect(picture.height).toBeLessThan(112);
+  // Change sits to its right, bottom-aligned, and inside the form.
+  expect(change.x).toBeGreaterThanOrEqual(picture.x + picture.width);
+  expect(change.x + change.width).toBeLessThanOrEqual(form.x + form.width + 0.5);
+  expect(Math.abs(change.y + change.height - (picture.y + picture.height))).toBeLessThan(
+    1,
+  );
+});
+
+test('shows a picture at its own shape, with no box around it', async ({
+  context,
+  extensionId,
+}) => {
+  await configureToken(context, extensionId);
+  const popup = await openPopupWithPictures(
+    context,
+    extensionId,
+    'https://example.com/square',
+    PICTURES,
+  );
+
+  const image = popup.locator('img.picture-preview');
+  await expect
+    .poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth))
+    .toBeGreaterThan(0);
+  const picture = (await image.boundingBox())!;
+  // The square icon stays square, at the 7rem (112px) cap — not
+  // stretched across the form inside a box.
+  expect(Math.round(picture.height)).toBe(112);
+  expect(Math.round(picture.width)).toBe(112);
+  expect(await image.evaluate((element) => getComputedStyle(element).borderStyle)).toBe(
+    'none',
+  );
 });
 
 test('unticking Include picture saves without one', async ({ context, extensionId }) => {

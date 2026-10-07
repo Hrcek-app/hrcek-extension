@@ -144,23 +144,29 @@ textarea {
   gap: 0.5rem;
   margin-top: 0.35rem;
 }
+/* The picture at its own shape, no box around it. Change always sits to
+   its right: the picture may take the row's width less Change's, so even
+   a panorama shrinks rather than pushing Change onto a line of its own.
+   An ordinary page picture is height-bound long before that. */
 .picture-preview {
-  flex: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 7rem;
   min-width: 0;
-  height: 7rem;
-  object-fit: contain;
-  background: var(--raised);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
+  max-width: calc(100% - 7rem);
+  border-radius: 0.3rem;
 }
+/* Words, not a picture, so this one keeps a box to hold them. */
 .picture-preview.unshowable {
-  display: grid;
-  place-items: center;
-  padding: 0.5rem;
+  flex: 1;
+  max-width: none;
+  padding: 0.75rem 0.5rem;
   text-align: center;
   font-size: 0.75rem;
   color: var(--muted);
-  border-style: dashed;
+  border: 1px dashed var(--edge);
+  border-radius: var(--radius);
 }
 #change-picture {
   flex: none;
