@@ -108,3 +108,35 @@ test('says so when syncing finds Hrček still down', async ({ context, extension
   await expect(page.locator('#result')).toHaveText("Hrček can't be reached.");
   await expect(page.locator('.pending-entry[data-state="waiting"]')).toHaveCount(1);
 });
+
+test('judges entries against a server changed while the page is open', async ({
+  context,
+  extensionId,
+}) => {
+  await configure(context, extensionId);
+  await fetch(`${SERVER}/__outage`, { method: 'POST' });
+  await keepOffline(context, extensionId, 'https://example.com/moved', 'Moved');
+  const page = await openPending(context, extensionId);
+  await expect(page.locator('.pending-entry[data-state="waiting"]')).toHaveCount(1);
+  // As if the person chose another Hrček in settings, in another tab.
+  await page.evaluate(async () => {
+    // The page is an extension page, so `chrome.storage` is there.
+    const { storage } = (
+      globalThis as unknown as {
+        chrome: {
+          storage: {
+            local: {
+              get(key: string): Promise<Record<string, object>>;
+              set(items: Record<string, object>): Promise<void>;
+            };
+          };
+        };
+      }
+    ).chrome;
+    const { settings } = await storage.local.get('settings');
+    await storage.local.set({
+      settings: { ...settings, serverUrl: 'https://elsewhere.example.org' },
+    });
+  });
+  await expect(page.locator('.pending-entry[data-state="elsewhere"]')).toHaveCount(1);
+});
