@@ -227,6 +227,10 @@ msgid "Hrček can't be reached."
 msgstr "Hrček ni dosegljiv."
 
 #: src/entrypoints/pending/view.ts
+msgid "Hrček could not be asked about the waiting entries: something went wrong on its side."
+msgstr "Hrčka ni bilo mogoče vprašati o čakajočih vnosih: na njegovi strani je šlo nekaj narobe."
+
+#: src/entrypoints/pending/view.ts
 msgid "{count, plural, one {# entry saved.} other {# entries saved.}}"
 msgstr "{count, plural, one {# vnos shranjen.} two {# vnosa shranjena.} few {# vnosi shranjeni.} other {# vnosov shranjenih.}}"
 

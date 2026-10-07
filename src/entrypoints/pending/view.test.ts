@@ -239,4 +239,18 @@ describe('createPendingView', () => {
     });
     expect(host.querySelector('#result')!.textContent).toBe("Hrček can't be reached.");
   });
+
+  it('says when Hrček could not be asked about the waiting entries', () => {
+    const { host, view } = mount([]);
+    view.showResult({
+      saved: 0,
+      held: 0,
+      refused: 0,
+      withoutPicture: [],
+      stopped: 'failed',
+    });
+    expect(host.querySelector('#result')!.textContent).toBe(
+      'Hrček could not be asked about the waiting entries: something went wrong on its side.',
+    );
+  });
 });
