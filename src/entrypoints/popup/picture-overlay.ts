@@ -112,13 +112,22 @@ export function openPictureChooser(state: PictureState, onClose: () => void): vo
     later.disabled = ends.atEnd;
   }
 
+  /**
+   * Everything the chooser covers, made inert while it is open: the form
+   * underneath is invisible, so Tab must not wander into it and Enter must
+   * not submit it. Only what this made inert is given back.
+   */
+  const covered: HTMLElement[] = [];
+
   let open = true;
   function finish(): void {
     if (!open) return;
     open = false;
     overlay.remove();
+    for (const element of covered) element.removeAttribute('inert');
     document.body.classList.remove('choosing');
     window.removeEventListener('resize', updateSteps);
+    document.removeEventListener('keydown', onKey);
     onClose();
   }
 
@@ -133,10 +142,12 @@ export function openPictureChooser(state: PictureState, onClose: () => void): vo
   tiles.addEventListener('scroll', updateSteps);
   window.addEventListener('resize', updateSteps);
 
-  overlay.addEventListener('keydown', (event) => {
+  // On the document, not the chooser: Firefox and Safari on macOS do not
+  // focus a clicked button, and a focused step button that becomes
+  // disabled drops focus to <body> — either way the key lands outside.
+  function onKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      // Chrome may close the whole popup on Escape before this runs; where
-      // it does not, the popup must not see it either.
+      // Chrome may close the whole popup on Escape before this runs.
       event.preventDefault();
       finish();
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -145,11 +156,18 @@ export function openPictureChooser(state: PictureState, onClose: () => void): vo
       update();
       selectedTile()?.focus();
     }
-  });
+  }
+  document.addEventListener('keydown', onKey);
 
   // The popup is as tall as its content; `choosing` makes it tall enough
   // for a picture worth judging, and leaving puts it back.
   document.body.classList.add('choosing');
+  for (const element of document.body.children) {
+    if (element instanceof HTMLElement && !element.hasAttribute('inert')) {
+      element.setAttribute('inert', '');
+      covered.push(element);
+    }
+  }
   document.body.append(overlay);
   update();
   updateSteps();

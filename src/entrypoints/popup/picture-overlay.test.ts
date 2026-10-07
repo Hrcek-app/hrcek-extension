@@ -152,6 +152,68 @@ describe('openPictureChooser', () => {
   });
 });
 
+describe('openPictureChooser, with focus outside it', () => {
+  // Firefox and Safari on macOS do not focus a clicked button, and a
+  // focused step button that becomes disabled drops focus to <body>.
+  // Either way the keys must still reach the chooser.
+  it('still closes on Escape when the key lands on the body', () => {
+    const { overlay, onClose } = open();
+    (document.activeElement as HTMLElement | null)?.blur();
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    expect(overlay()).toBeNull();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('still moves the selection when an arrow lands on the body', () => {
+    const { state } = open();
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(state.selected()!.key).toBe('https://e.test/a.jpg');
+  });
+
+  it('stops listening once closed', () => {
+    const { state } = open();
+    document.querySelector<HTMLButtonElement>('.chooser-close')!.click();
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(state.selected()!.key).toBe('https://e.test/og.jpg');
+  });
+});
+
+describe('openPictureChooser, over the form', () => {
+  it('makes what it covers inert while open, and gives it back on close', () => {
+    // The form under the chooser is invisible; Tab must not reach it, nor
+    // Enter submit it, while somebody is choosing.
+    const app = document.createElement('div');
+    const alreadyInert = document.createElement('div');
+    alreadyInert.setAttribute('inert', '');
+    document.body.append(app, alreadyInert);
+
+    open();
+    expect(app.hasAttribute('inert')).toBe(true);
+    expect(document.querySelector<HTMLElement>('.chooser')!.hasAttribute('inert')).toBe(
+      false,
+    );
+
+    document.querySelector<HTMLButtonElement>('.chooser-close')!.click();
+    expect(app.hasAttribute('inert')).toBe(false);
+    // Something inert for its own reasons stays that way.
+    expect(alreadyInert.hasAttribute('inert')).toBe(true);
+  });
+});
+
 describe('stripEnds', () => {
   it('is at both ends when everything fits', () => {
     expect(stripEnds(0, 400, 400)).toEqual({ atStart: true, atEnd: true });
