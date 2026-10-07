@@ -60,8 +60,9 @@ export async function sendQueued(client: HrcekClient, item: Sendable): Promise<S
 /**
  * Looks before writing, entry by entry, oldest first. Hrček holding the
  * address already is not this routine's to settle: the entry is held for
- * a person. Only waiting entries meant for `server` are touched. The
- * first sign of an outage, a refused token
+ * a person. Only waiting entries meant for `server` are touched, and
+ * each is read again before it is handled, so one deleted or replaced
+ * meanwhile is left alone. The first sign of an outage, a refused token
  * or a lookup that fails any other way ends the run with everything
  * after it as it was.
  */
@@ -77,9 +78,18 @@ export async function syncQueue(
     withoutPicture: [],
     stopped: null,
   };
-  for (const entry of await queue.list()) {
-    if (entry.server !== server || entry.state.kind !== 'waiting') continue;
-    const { url } = entry.request;
+  for (const listed of await queue.list()) {
+    if (listed.server !== server || listed.state.kind !== 'waiting') continue;
+    const { url } = listed.request;
+    // The list is a snapshot: the person may have deleted this entry, or
+    // the popup saved a newer copy, since it was read.
+    const entry = await queue.get(url);
+    if (
+      entry === null ||
+      entry.savedAt !== listed.savedAt ||
+      entry.state.kind !== 'waiting'
+    )
+      continue;
     let existing: EntryOut | null;
     try {
       existing = await loadExisting(client, url);

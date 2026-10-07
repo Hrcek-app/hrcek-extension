@@ -166,6 +166,71 @@ describe('syncQueue', () => {
     expect((await queue.list()).map((e) => e.state.kind)).toEqual(['waiting', 'waiting']);
   });
 
+  it('never sends an entry deleted while the sync ran', async () => {
+    const queue = await queueWith('https://e.test/a', 'https://e.test/b');
+    const { client, saved } = fakeClient();
+    const looked: string[] = [];
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    let asked!: () => void;
+    const askedA = new Promise<void>((resolve) => (asked = resolve));
+    const lookup = client.getEntryByUrl.bind(client);
+    client.getEntryByUrl = async (url: string) => {
+      looked.push(url);
+      if (url === 'https://e.test/a') {
+        asked();
+        await gate;
+      }
+      return lookup(url);
+    };
+    const syncing = syncQueue(client, queue, SERVER);
+    await askedA;
+    await queue.remove('https://e.test/b');
+    open();
+    const result = await syncing;
+    expect(looked).toEqual(['https://e.test/a']);
+    expect(saved.map((e) => e.url)).toEqual(['https://e.test/a']);
+    expect(result.saved).toBe(1);
+  });
+
+  it('leaves a newer copy saved while the sync ran for the next one', async () => {
+    const queue = await queueWith('https://e.test/a', 'https://e.test/b');
+    const { client, saved } = fakeClient();
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    let asked!: () => void;
+    const askedA = new Promise<void>((resolve) => (asked = resolve));
+    const lookup = client.getEntryByUrl.bind(client);
+    client.getEntryByUrl = async (url: string) => {
+      if (url === 'https://e.test/a') {
+        asked();
+        await gate;
+      }
+      return lookup(url);
+    };
+    const syncing = syncQueue(client, queue, SERVER);
+    await askedA;
+    await queue.put({
+      request: {
+        url: 'https://e.test/b',
+        title: 'newer',
+        notes: '',
+        tags: [],
+        fields: {},
+      },
+      picture: null,
+      savedAt: 99,
+      server: SERVER,
+    });
+    open();
+    await syncing;
+    expect(saved.map((e) => e.url)).toEqual(['https://e.test/a']);
+    const kept = await queue.get('https://e.test/b');
+    expect(kept?.savedAt).toBe(99);
+    expect(kept?.request.title).toBe('newer');
+    expect(kept?.state).toEqual({ kind: 'waiting' });
+  });
+
   it('skips entries meant for another server', async () => {
     const queue = await queueWith('https://e.test/a');
     const { client, saved } = fakeClient();
