@@ -54,6 +54,7 @@ function mount(entries: QueuedEntry[], overrides: Partial<PendingDeps> = {}) {
     sync: vi.fn(async () => null),
     open: vi.fn(),
     pictureSrc: () => null,
+    serverPicture: async () => null,
     ...overrides,
   };
   const host = document.createElement('div');
@@ -105,6 +106,58 @@ describe('createPendingView', () => {
     host.querySelector<HTMLButtonElement>('.keep')!.click();
     await flush();
     expect(deps.remove).toHaveBeenCalledWith(entry);
+  });
+
+  it('shows a differing field on both sides of a held comparison', async () => {
+    const entry = queued('https://e.test/a', { kind: 'held' });
+    entry.request.fields = { Price: '5', Empty: '' };
+    const { host, view } = mount([entry], {
+      lookup: async (url) => ({ ...theirs(url), fields: { Price: '3' } }),
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.theirs')!.textContent).toContain('Price: 3');
+    expect(host.querySelector('.mine')!.textContent).toContain('Price: 5');
+    expect(host.querySelector('.mine')!.textContent).not.toContain('Empty');
+  });
+
+  it('shows Hrček’s picture on its side when one can be loaded', async () => {
+    const image = { url: 'https://hrcek.example.org/i/1' } as EntryOut['image'];
+    const { host, view } = mount([queued('https://e.test/a', { kind: 'held' })], {
+      lookup: async (url) => ({ ...theirs(url), image }),
+      serverPicture: async () => 'blob:theirs',
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.theirs img')!.getAttribute('src')).toBe('blob:theirs');
+  });
+
+  it('shows no picture on Hrček’s side when it cannot be loaded', async () => {
+    const image = { url: 'https://hrcek.example.org/i/1' } as EntryOut['image'];
+    const { host, view } = mount([queued('https://e.test/a', { kind: 'held' })], {
+      lookup: async (url) => ({ ...theirs(url), image }),
+      serverPicture: async () => null,
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.theirs')).not.toBeNull();
+    expect(host.querySelector('.theirs img')).toBeNull();
+  });
+
+  it('keeps hostile field names and values inert', async () => {
+    const hostile = '<img src=x onerror=alert(1)>';
+    const entry = queued('https://e.test/a', { kind: 'held' });
+    entry.request.fields = { [hostile]: hostile };
+    const { host, view } = mount([entry], {
+      lookup: async (url) => ({ ...theirs(url), fields: { [hostile]: hostile } }),
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.compare img')).toBeNull();
+    expect(host.querySelector('.mine')!.textContent).toContain(`${hostile}: ${hostile}`);
+    expect(host.querySelector('.theirs')!.textContent).toContain(
+      `${hostile}: ${hostile}`,
+    );
   });
 
   it('replaces Hrček’s entry with the queued copy on request', async () => {

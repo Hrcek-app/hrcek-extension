@@ -5,7 +5,7 @@ import { openQueue, type QueuedEntry } from '../../lib/offline/queue';
 import type { SyncResult } from '../../lib/offline/sync';
 import { loadExisting } from '../../lib/save';
 import { isConfigured, loadSettings, type Settings } from '../../lib/settings';
-import { createPendingView } from './view';
+import { createPendingView, type PendingDeps } from './view';
 import '../../lib/ui/theme.css';
 import './style.css';
 
@@ -21,6 +21,20 @@ function pictureSrc(picture: QueuedEntry['picture']): string | null {
   const src = URL.createObjectURL(picture.blob);
   pictureUrls.push(src);
   return src;
+}
+
+async function serverPicture(
+  image: Parameters<PendingDeps['serverPicture']>[0],
+): Promise<string | null> {
+  if (image === null || !isConfigured(settings)) return null;
+  try {
+    const blob = await clientFromSettings(settings, locale).fetchImage(image.url);
+    const src = URL.createObjectURL(blob);
+    pictureUrls.push(src);
+    return src;
+  } catch {
+    return null;
+  }
 }
 
 let view: ReturnType<typeof createPendingView> | null = null;
@@ -48,6 +62,7 @@ function mount(): ReturnType<typeof createPendingView> {
       browser.runtime.sendMessage({ type: 'hrcek:sync' }) as Promise<SyncResult | null>,
     open: (url) => void browser.tabs.create({ url }),
     pictureSrc,
+    serverPicture,
   });
 }
 

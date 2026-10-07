@@ -15,6 +15,8 @@ export interface PendingDeps {
   sync(): Promise<SyncResult | null>;
   open(url: string): void;
   pictureSrc(picture: QueuedEntry['picture']): string | null;
+  /** Hrček's own picture as something an <img> can show, or null. */
+  serverPicture(image: EntryOut['image']): Promise<string | null>;
 }
 
 export interface PendingView {
@@ -41,17 +43,25 @@ function button(className: string, text: string, onClick: () => void): HTMLButto
   return node;
 }
 
-/** Title, notes and tags of one version of an entry. */
+/** Title, notes, tags, fields and picture of one version of an entry. */
 function summary(
   className: string,
   heading: string,
-  version: { title: string; notes: string; tags: string[] },
+  version: {
+    title: string;
+    notes: string;
+    tags: string[];
+    fields: Record<string, string>;
+  },
   pictureSrc: string | null,
 ): HTMLElement {
   const box = element('div', className);
   box.append(element('h3', undefined, heading), element('p', 'title', version.title));
   if (version.notes !== '') box.append(element('p', 'notes', version.notes));
   if (version.tags.length > 0) box.append(element('p', 'tags', version.tags.join(', ')));
+  for (const [name, value] of Object.entries(version.fields)) {
+    if (value !== '') box.append(element('p', 'field', `${name}: ${value}`));
+  }
   if (pictureSrc !== null) {
     const image = element('img', 'picture');
     image.src = pictureSrc;
@@ -167,34 +177,45 @@ export function createPendingView(host: HTMLElement, deps: PendingDeps): Pending
     actions.append(keep, replace, openButton(entry));
     article.append(compare, actions);
 
-    void deps.lookup(entry.request.url).then(
-      (server) => {
-        compare.replaceChildren();
-        if (server === null) {
+    void deps
+      .lookup(entry.request.url)
+      .then(async (server) => ({
+        server,
+        picture: server === null ? null : await deps.serverPicture(server.image),
+      }))
+      .then(
+        ({ server, picture }) => {
+          compare.replaceChildren();
+          if (server === null) {
+            compare.append(
+              element('p', undefined, i18n._('Hrček no longer has this address.')),
+            );
+          } else {
+            compare.append(summary('theirs', i18n._('On Hrček'), server, picture));
+          }
           compare.append(
-            element('p', undefined, i18n._('Hrček no longer has this address.')),
+            summary(
+              'mine',
+              i18n._('Yours'),
+              entry.request,
+              deps.pictureSrc(entry.picture),
+            ),
           );
-        } else {
-          compare.append(summary('theirs', i18n._('On Hrček'), server, null));
-        }
-        compare.append(
-          summary('mine', i18n._('Yours'), entry.request, deps.pictureSrc(entry.picture)),
-        );
-      },
-      (error: unknown) => {
-        compare.replaceChildren(
-          element(
-            'p',
-            'trouble',
-            isUnavailable(error)
-              ? i18n._("Hrček can't be reached, so what it has can't be shown.")
-              : i18n._('Something went wrong.'),
-          ),
-        );
-        keep.disabled = true;
-        replace.disabled = true;
-      },
-    );
+        },
+        (error: unknown) => {
+          compare.replaceChildren(
+            element(
+              'p',
+              'trouble',
+              isUnavailable(error)
+                ? i18n._("Hrček can't be reached, so what it has can't be shown.")
+                : i18n._('Something went wrong.'),
+            ),
+          );
+          keep.disabled = true;
+          replace.disabled = true;
+        },
+      );
   }
 
   function render(entry: QueuedEntry): HTMLElement {
