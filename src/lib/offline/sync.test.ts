@@ -3,8 +3,13 @@ import { describe, expect, it } from 'vitest';
 import type { HrcekClient } from '../api/client';
 import { HrcekApiError, HrcekNetworkError } from '../api/errors';
 import type { EntryIn, EntryOut } from '../api/types';
-import { openQueue, type QueuedPicture } from './queue';
-import { sendQueued, syncQueue } from './sync';
+import {
+  openQueue,
+  type QueuedEntry,
+  type QueuedPicture,
+  type QueuedState,
+} from './queue';
+import { canReplace, sendQueued, syncQueue } from './sync';
 
 const SERVER = 'https://hrcek.example.org';
 const NOT_HELD = new HrcekApiError(404, 'HRC-CORE-0003', 'Not found.');
@@ -322,5 +327,32 @@ describe('sendQueued', () => {
     expect(saved[0]).not.toHaveProperty('image_url');
     expect(uploads).toEqual([]);
     expect(sent.status).toBe('created');
+  });
+});
+
+describe('canReplace', () => {
+  const entry = (server: string, state: QueuedState): QueuedEntry => ({
+    request: { url: 'https://e.test/a', title: 'A', notes: '', tags: [], fields: {} },
+    picture: null,
+    savedAt: 1,
+    server,
+    state,
+  });
+
+  it('allows a held entry meant for the server in settings', () => {
+    expect(canReplace(entry(SERVER, { kind: 'held' }), SERVER)).toBe(true);
+  });
+
+  it('refuses an entry meant for another server', () => {
+    expect(canReplace(entry(SERVER, { kind: 'held' }), 'https://other.example.org')).toBe(
+      false,
+    );
+  });
+
+  it('refuses an entry that is not held', () => {
+    expect(canReplace(entry(SERVER, { kind: 'waiting' }), SERVER)).toBe(false);
+    expect(canReplace(entry(SERVER, { kind: 'refused', message: 'no' }), SERVER)).toBe(
+      false,
+    );
   });
 });
