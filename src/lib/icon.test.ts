@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { iconPaths, setTitle } from './icon';
+import { iconPaths, setBadge, setTitle } from './icon';
 
 describe('iconPaths', () => {
   it('serves the plain hamster when configured but the page is not held', () => {
@@ -36,5 +36,23 @@ describe('setTitle', () => {
   it('swallows a failure — a tab can close between the lookup and the answer', async () => {
     vi.spyOn(fakeBrowser.action, 'setTitle').mockRejectedValueOnce(new Error('gone'));
     await expect(setTitle('Hrček: sign in again', 7)).resolves.toBeUndefined();
+  });
+});
+
+describe('setBadge', () => {
+  it('sets the count for every tab at once', async () => {
+    await setBadge('3');
+    expect(await fakeBrowser.action.getBadgeText({})).toBe('3');
+  });
+
+  it('clears it with an empty string', async () => {
+    await setBadge('3');
+    await setBadge('');
+    expect(await fakeBrowser.action.getBadgeText({})).toBe('');
+  });
+
+  it('swallows a failure', async () => {
+    vi.spyOn(fakeBrowser.action, 'setBadgeText').mockRejectedValueOnce(new Error('gone'));
+    await expect(setBadge('1')).resolves.toBeUndefined();
   });
 });

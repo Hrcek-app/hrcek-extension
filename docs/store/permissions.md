@@ -21,7 +21,15 @@ Keeps the server address, the API token and the preferences in
 unencrypted. A short-lived cache of recent saved/not-saved answers also
 lives in `storage.session` (memory-only, cleared when the browser
 closes) so the toolbar badge survives Chrome's service worker going
-idle; see `docs/store/privacy.md` for what it holds.
+idle; see `docs/store/privacy.md` for what it holds. Entries kept
+while Hrček cannot be reached live in the extension's own IndexedDB
+storage until they are sent or deleted; see `docs/store/privacy.md`.
+
+## `contextMenus`
+
+Adds two items to the menu of the extension's own toolbar button: one
+opens the list of entries waiting to be saved to Hrček, the other tries
+to save them now. Nothing is added to the menu of web pages.
 
 ## `tabs`
 

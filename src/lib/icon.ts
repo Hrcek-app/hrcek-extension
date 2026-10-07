@@ -47,3 +47,19 @@ export async function setTitle(title: string, tabId?: number): Promise<void> {
     // The tab is gone. Nothing to name.
   }
 }
+
+/** The theme's accent, so the count reads as the extension's own. */
+const BADGE_COLOUR = '#234e9c';
+
+/**
+ * The waiting count, on every tab at once. Global on purpose: the queue
+ * belongs to no page. Like the icon, a refusal is not worth a rejection.
+ */
+export async function setBadge(text: string): Promise<void> {
+  try {
+    await toolbarAction().setBadgeBackgroundColor({ color: BADGE_COLOUR });
+    await toolbarAction().setBadgeText({ text });
+  } catch {
+    // Nothing to do about it.
+  }
+}
