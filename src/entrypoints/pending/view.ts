@@ -155,9 +155,13 @@ export function createPendingView(host: HTMLElement, deps: PendingDeps): Pending
 
   function held(entry: QueuedEntry, article: HTMLElement): void {
     const compare = element('div', 'compare', i18n._('Loading what Hrček has…'));
+    // Keeping Hrček's deletes the only other copy, so it waits until
+    // there is something on Hrček to keep.
+    let found = false;
     const keep = button('keep', i18n._("Keep what's on Hrček"), () => {
       void deps.remove(entry).then(refresh);
     });
+    keep.disabled = true;
     const replace = button('replace', i18n._('Replace with mine'), () => {
       keep.disabled = true;
       replace.disabled = true;
@@ -172,7 +176,7 @@ export function createPendingView(host: HTMLElement, deps: PendingDeps): Pending
                 : (answer.message ?? i18n._('Something went wrong.')),
             ),
           );
-          keep.disabled = false;
+          keep.disabled = !found;
           replace.disabled = false;
           return;
         }
@@ -198,6 +202,8 @@ export function createPendingView(host: HTMLElement, deps: PendingDeps): Pending
             );
           } else {
             compare.append(summary('theirs', i18n._('On Hrček'), server, picture));
+            found = true;
+            keep.disabled = replace.disabled;
           }
           compare.append(
             summary(

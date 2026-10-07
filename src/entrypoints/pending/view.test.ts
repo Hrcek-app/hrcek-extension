@@ -253,4 +253,39 @@ describe('createPendingView', () => {
       'Hrček could not be asked about the waiting entries: something went wrong on its side.',
     );
   });
+
+  it('keeps Keep disabled while what Hrček has is loading', async () => {
+    let answer!: (entry: EntryOut | null) => void;
+    const { host, view } = mount([queued('https://e.test/a', { kind: 'held' })], {
+      lookup: () => new Promise((resolve) => (answer = resolve)),
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector<HTMLButtonElement>('.keep')!.disabled).toBe(true);
+    answer(theirs('https://e.test/a'));
+  });
+
+  it('keeps Keep disabled when Hrček no longer has the address', async () => {
+    const { host, deps, view } = mount([queued('https://e.test/a', { kind: 'held' })], {
+      lookup: async () => null,
+    });
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.compare')!.textContent).toContain(
+      'Hrček no longer has this address.',
+    );
+    const keep = host.querySelector<HTMLButtonElement>('.keep')!;
+    expect(keep.disabled).toBe(true);
+    keep.click();
+    await flush();
+    expect(deps.remove).not.toHaveBeenCalled();
+  });
+
+  it('enables Keep once what Hrček has is shown', async () => {
+    const { host, view } = mount([queued('https://e.test/a', { kind: 'held' })]);
+    await view.refresh();
+    await flush();
+    expect(host.querySelector('.compare .theirs')).not.toBeNull();
+    expect(host.querySelector<HTMLButtonElement>('.keep')!.disabled).toBe(false);
+  });
 });
