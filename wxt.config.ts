@@ -28,6 +28,9 @@ export default defineConfig({
     permissions: [
       'activeTab',
       'storage',
+      // Two items on the toolbar button's own menu — the waiting list and
+      // Sync now. Firefox takes `contextMenus` as an alias of `menus`.
+      'contextMenus',
       // The saved-state badge needs each tab's address to decide whether
       // that page is already held. `activeTab` only reveals a tab's URL
       // after a user gesture toward the extension on that specific tab;
