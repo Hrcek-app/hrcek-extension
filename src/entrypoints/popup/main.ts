@@ -74,6 +74,8 @@ let queued: QueuedEntry | null = null;
 let source: OpenPlan['source'] = 'empty';
 /** True while Hrček is unavailable: Save keeps the entry for later. */
 let unavailable = false;
+/** True once the person has seen the queued copy; only then may a save spend it. */
+let queuedShown = false;
 
 /**
  * What to show the held picture with. The entry only carries an address,
@@ -466,6 +468,7 @@ async function save(): Promise<void> {
       if (existing !== null) {
         await loadHeldPicture(existing.image);
         source = 'server';
+        queuedShown = false;
         renderForm(entryToForm(existing, definitions), true);
         setStatus(
           'error',
@@ -505,7 +508,8 @@ async function save(): Promise<void> {
       .sendMessage({ type: 'hrcek:saved', url: sent.entry.url, held: true })
       .catch(() => undefined);
     // This address is on Hrček now; any queued copy of it is spent.
-    if (queued !== null) await queue.remove(pageUrl).catch(() => undefined);
+    if (queued !== null && queuedShown)
+      await queue.remove(pageUrl).catch(() => undefined);
     requestSync();
     if (sent.trouble !== null) {
       await finish(
@@ -581,7 +585,16 @@ async function main(): Promise<void> {
     }
     if (!isUnavailable(error)) {
       lookupFailed = true;
-      renderForm(emptyForm(url, title, definitions), false);
+      if (queued !== null) {
+        // Show the copy they were working on, not an empty form that a
+        // save would put in its place.
+        source = 'queued';
+        queuedShown = true;
+        held = heldFromQueued(queued.picture);
+        renderForm(queuedToForm(queued, definitions), false, true);
+      } else {
+        renderForm(emptyForm(url, title, definitions), false);
+      }
       setStatus('error', messageFor(error));
       return;
     }
@@ -590,6 +603,7 @@ async function main(): Promise<void> {
   const plan = planOpen(lookup, queued);
   source = plan.source;
   unavailable = lookup === 'unavailable';
+  queuedShown = plan.source === 'queued' || plan.note === 'alsoQueued';
   if (plan.source === 'server') {
     await loadHeldPicture(existing!.image);
     renderForm(entryToForm(existing!, definitions), true);
