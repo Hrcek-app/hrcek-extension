@@ -7,6 +7,14 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: src/entrypoints/background.ts
+msgid "Waiting to sync ({count})…"
+msgstr "Waiting to sync ({count})…"
+
+#: src/entrypoints/background.ts
+msgid "Sync now"
+msgstr "Sync now"
+
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr ""

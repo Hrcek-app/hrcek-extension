@@ -1,11 +1,17 @@
 import { browser } from 'wxt/browser';
-import { isAuthFailure } from '../lib/api/errors';
+import { HrcekApiError, isAuthFailure } from '../lib/api/errors';
 import { badgeForAnswer, isSaveable, planBadge } from '../lib/badge';
 import { clientFromSettings } from '../lib/client-factory';
 import { i18n } from '@lingui/core';
 import { type BadgeTitle } from '../lib/badge';
 import { activateLocale, localeFor } from '../lib/i18n';
-import { setIcon, setTitle } from '../lib/icon';
+import { setBadge, setIcon, setTitle } from '../lib/icon';
+import { pendingBadgeText } from '../lib/offline/keep';
+import { openQueue } from '../lib/offline/queue';
+import { createRunner } from '../lib/offline/runner';
+import { canReplace, sendQueued, syncQueue, type SyncResult } from '../lib/offline/sync';
+import { isUnavailable } from '../lib/offline/unavailable';
+import { toolbarMenuContext } from '../lib/platform/menus';
 import { sessionStore } from '../lib/platform/session-store';
 import { loadExisting } from '../lib/save';
 import { createSavedState, type Answer } from '../lib/saved-state';
@@ -49,6 +55,95 @@ const savedState = createSavedState({
   store: sessionStore('saved-state'),
 });
 
+const queue = openQueue();
+const MENU_PENDING = 'hrcek-pending';
+const MENU_SYNC = 'hrcek-sync';
+
+/** Tells every open extension page; nobody listening is not an error. */
+function broadcast(message: unknown): void {
+  void browser.runtime.sendMessage(message).catch(() => undefined);
+}
+
+/** The badge and the menu label follow the queue. */
+async function paintPending(): Promise<void> {
+  const count = await queue.count().catch(() => 0);
+  await setBadge(pendingBadgeText(count));
+  try {
+    await browser.contextMenus.update(MENU_PENDING, {
+      title: i18n._('Waiting to sync ({count})…', { count }),
+    });
+  } catch {
+    // The menu is created at start; an update racing it is harmless.
+  }
+}
+
+async function syncOnce(): Promise<SyncResult | null> {
+  const settings = await loadSettings();
+  if (!isConfigured(settings)) return null;
+  const client = clientFromSettings(settings, localeFor(settings.language));
+  const result = await syncQueue(client, queue, settings.serverUrl);
+  if (result.stopped === 'unauthorized') {
+    await setIcon('unconfigured');
+    await setTitle(toolbarTitle('signInAgain'));
+  }
+  return result;
+}
+
+const runner = createRunner(async () => {
+  const result = await syncOnce().catch((error: unknown) => {
+    console.warn('[hrcek] sync failed', error);
+    return null;
+  });
+  await paintPending();
+  broadcast({ type: 'hrcek:synced', result });
+  return result;
+});
+
+type ReplaceAnswer =
+  { ok: true } | { ok: false; unavailable: boolean; message: string | null };
+
+/** "Replace with mine": sends a held copy as it is, over Hrček's. */
+function replace(url: string): Promise<ReplaceAnswer> {
+  return runner.exclusive(async () => {
+    try {
+      const settings = await loadSettings();
+      const entry = await queue.get(url);
+      if (!isConfigured(settings) || entry === null) return { ok: true } as const;
+      if (!canReplace(entry, settings.serverUrl))
+        return { ok: false, unavailable: false, message: null } as const;
+      const client = clientFromSettings(settings, localeFor(settings.language));
+      await sendQueued(client, entry);
+      await queue.remove(url, entry.savedAt);
+      savedState.mark(url, true);
+      return { ok: true } as const;
+    } catch (error) {
+      return {
+        ok: false,
+        unavailable: isUnavailable(error),
+        message: error instanceof HrcekApiError ? error.message : null,
+      } as const;
+    } finally {
+      await paintPending();
+      broadcast({ type: 'hrcek:synced', result: null });
+    }
+  });
+}
+
+function createMenus(): void {
+  const contexts: [ReturnType<typeof toolbarMenuContext>] = [
+    toolbarMenuContext(import.meta.env.MANIFEST_VERSION),
+  ];
+  void browser.contextMenus.removeAll().then(() => {
+    browser.contextMenus.create({
+      id: MENU_PENDING,
+      title: i18n._('Waiting to sync ({count})…', { count: 0 }),
+      contexts,
+    });
+    browser.contextMenus.create({ id: MENU_SYNC, title: i18n._('Sync now'), contexts });
+    void paintPending();
+  });
+}
+
 let pending: ReturnType<typeof setTimeout> | undefined;
 
 /**
@@ -91,6 +186,35 @@ export default defineBackground(() => {
   void refreshLanguage();
   void paintGlobal();
 
+  createMenus();
+
+  browser.contextMenus.onClicked.addListener((info) => {
+    if (info.menuItemId === MENU_PENDING) {
+      void browser.tabs.create({
+        // The page arrives with a later task; until then WXT's typed paths do not know it.
+        url: browser.runtime.getURL('/pending.html' as never),
+      });
+    } else if (info.menuItemId === MENU_SYNC) {
+      void runner.sync();
+    }
+  });
+
+  // sendResponse plus `return true`, not a returned promise: Chrome does
+  // not take a promise from an onMessage listener everywhere.
+  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+    const asked = message as { type?: string; url?: string };
+    if (asked.type === 'hrcek:sync') {
+      void runner.sync().then(sendResponse);
+      return true;
+    }
+    if (asked.type === 'hrcek:replace' && asked.url !== undefined) {
+      void replace(asked.url).then(sendResponse);
+      return true;
+    }
+    if (asked.type === 'hrcek:queue-changed') void paintPending();
+    return undefined;
+  });
+
   browser.tabs.onActivated.addListener(({ tabId }) => {
     void browser.tabs.get(tabId).then(
       (tab) => paint(tabId, tab.url),
@@ -130,6 +254,7 @@ export default defineBackground(() => {
     // changed with it.
     savedState.reset();
     void refreshLanguage().then(() => {
+      createMenus();
       void paintGlobal();
       void browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
         if (tab?.id !== undefined) void paint(tab.id, tab.url);
