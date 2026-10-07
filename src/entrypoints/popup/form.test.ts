@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { entryToForm, formToSaveRequest, parseTags } from './form';
+import { entryToForm, formToSaveRequest, parseTags, queuedToForm } from './form';
 import type { EntryOut } from '../../lib/api/types';
 import type { FieldOut } from '../../lib/api/types';
 
@@ -43,5 +43,31 @@ describe('formToSaveRequest', () => {
     const form = entryToForm(ENTRY, DEFINITIONS);
     form.fields[0]!.value = '';
     expect(formToSaveRequest(form).fields).toEqual({ Price: '', Priority: '' });
+  });
+});
+
+describe('queuedToForm', () => {
+  it('fills the form from a queued copy', () => {
+    const form = queuedToForm(
+      {
+        request: {
+          url: 'https://e.test/a',
+          title: 'A',
+          notes: 'n',
+          tags: ['x', 'y'],
+          fields: { Price: '3' },
+        },
+        picture: null,
+        savedAt: 1,
+        server: 'https://hrcek.example.org',
+        state: { kind: 'waiting' },
+      },
+      null,
+    );
+    expect(form.url).toBe('https://e.test/a');
+    expect(form.title).toBe('A');
+    expect(form.notes).toBe('n');
+    expect(form.tags).toBe('x, y');
+    expect(form.fields.map((f) => [f.name, f.value])).toEqual([['Price', '3']]);
   });
 });
