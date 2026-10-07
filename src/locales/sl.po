@@ -7,34 +7,6 @@ msgstr ""
 "Language: sl\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
-#: src/entrypoints/popup/main.ts
-msgid "Hrček can't be reached. Saving keeps this entry here until it can."
-msgstr "Hrček ni dosegljiv. Ob shranjevanju vnos ostane tukaj, dokler ne bo."
-
-#: src/entrypoints/popup/main.ts
-msgid "Waiting to be saved to Hrček."
-msgstr "Čaka, da se shrani na Hrček."
-
-#: src/entrypoints/popup/main.ts
-msgid "Hrček refused this entry: {reason}"
-msgstr "Hrček je ta vnos zavrnil: {reason}"
-
-#: src/entrypoints/popup/main.ts
-msgid "You also have an unsynced copy of this page — saving here replaces it."
-msgstr "Imate tudi nesinhronizirano kopijo te strani — shranjevanje tukaj jo nadomesti."
-
-#: src/entrypoints/popup/main.ts
-msgid "100 entries are already waiting to be saved. Sync or delete some first."
-msgstr "Na shranjevanje že čaka 100 vnosov. Najprej jih sinhronizirajte ali nekaj izbrišite."
-
-#: src/entrypoints/popup/main.ts
-msgid "Kept for later — it will be saved to Hrček once it can be reached."
-msgstr "Shranjeno za pozneje — na Hrček bo shranjeno, ko bo dosegljiv."
-
-#: src/entrypoints/popup/main.ts
-msgid "Save for later"
-msgstr "Shrani za pozneje"
-
 #: src/lib/i18n/lingui.test.ts
 msgid "{count, plural, one {# entry} other {# entries}}"
 msgstr "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}"
@@ -57,6 +29,7 @@ msgid "Waiting to sync ({count})…"
 msgstr "Čaka na sinhronizacijo ({count})…"
 
 #: src/entrypoints/background.ts
+#: src/entrypoints/pending/view.ts
 msgid "Sync now"
 msgstr "Sinhroniziraj zdaj"
 
@@ -77,10 +50,35 @@ msgstr "Strežnika {server} ni bilo mogoče doseči."
 msgid "The picture could not be attached."
 msgstr "Slike ni bilo mogoče priložiti."
 
+#: src/entrypoints/popup/main.ts
+msgid "Hrček can't be reached. Saving keeps this entry here until it can."
+msgstr "Hrček ni dosegljiv. Ob shranjevanju vnos ostane tukaj, dokler ne bo."
+
+#: src/entrypoints/popup/main.ts
+msgid "Waiting to be saved to Hrček."
+msgstr "Čaka, da se shrani na Hrček."
+
+#: src/entrypoints/popup/main.ts
+msgid "Hrček refused this entry: {reason}"
+msgstr "Hrček je ta vnos zavrnil: {reason}"
+
+#: src/entrypoints/popup/main.ts
+msgid "You also have an unsynced copy of this page — saving here replaces it."
+msgstr "Imate tudi nesinhronizirano kopijo te strani — shranjevanje tukaj jo nadomesti."
+
+#: src/entrypoints/popup/main.ts
+msgid "100 entries are already waiting to be saved. Sync or delete some first."
+msgstr "Na shranjevanje že čaka 100 vnosov. Najprej jih sinhronizirajte ali nekaj izbrišite."
+
 #: src/entrypoints/options/main.ts
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Something went wrong."
 msgstr "Nekaj je šlo narobe."
+
+#: src/entrypoints/popup/main.ts
+msgid "Kept for later — it will be saved to Hrček once it can be reached."
+msgstr "Shranjeno za pozneje — na Hrček bo shranjeno, ko bo dosegljiv."
 
 #: src/entrypoints/popup/main.ts
 msgid "{option} (no longer offered)"
@@ -90,6 +88,7 @@ msgstr "{option} (ni več na voljo)"
 msgid "Your fields"
 msgstr "Vaša polja"
 
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Hrček is not configured yet."
 msgstr "Hrček še ni nastavljen."
@@ -98,6 +97,7 @@ msgstr "Hrček še ni nastavljen."
 msgid "Open settings"
 msgstr "Odpri nastavitve"
 
+#: src/entrypoints/pending/view.ts
 #: src/entrypoints/popup/main.ts
 msgid "Your Hrček no longer accepts this token. Make a new one in settings."
 msgstr "Vaš Hrček tega žetona ne sprejema več. Ustvarite novega v nastavitvah."
@@ -165,6 +165,10 @@ msgstr "Shranjeno."
 msgid "Updated."
 msgstr "Posodobljeno."
 
+#: src/entrypoints/popup/main.ts
+msgid "Save for later"
+msgstr "Shrani za pozneje"
+
 #: src/entrypoints/popup/picture-overlay.ts
 msgid "Choose a picture"
 msgstr "Izberi sliko"
@@ -213,6 +217,86 @@ msgstr "Vključi sliko"
 #: src/entrypoints/popup/picture-row.ts
 msgid "Change"
 msgstr "Zamenjaj"
+
+#: src/entrypoints/pending/view.ts
+msgid "Waiting to sync"
+msgstr "Čaka na sinhronizacijo"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček can't be reached."
+msgstr "Hrček ni dosegljiv."
+
+#: src/entrypoints/pending/view.ts
+msgid "{count, plural, one {# entry saved.} other {# entries saved.}}"
+msgstr "{count, plural, one {# vnos shranjen.} two {# vnosa shranjena.} few {# vnosi shranjeni.} other {# vnosov shranjenih.}}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved without its picture: {title}"
+msgstr "Shranjeno brez slike: {title}"
+
+#: src/entrypoints/pending/view.ts
+msgid "{count, plural, one {# is already on Hrček and waits for your review.} other {# are already on Hrček and wait for your review.}}"
+msgstr "{count, plural, one {# je že na Hrčku in čaka na vaš pregled.} two {# sta že na Hrčku in čakata na vaš pregled.} few {# so že na Hrčku in čakajo na vaš pregled.} other {# jih je že na Hrčku in čakajo na vaš pregled.}}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Delete"
+msgstr "Izbriši"
+
+#: src/entrypoints/pending/view.ts
+msgid "Delete for good"
+msgstr "Izbriši dokončno"
+
+#: src/entrypoints/pending/view.ts
+msgid "Cancel"
+msgstr "Prekliči"
+
+#: src/entrypoints/pending/view.ts
+msgid "Open page"
+msgstr "Odpri stran"
+
+#: src/entrypoints/pending/view.ts
+msgid "Loading what Hrček has…"
+msgstr "Nalagam, kar ima Hrček…"
+
+#: src/entrypoints/pending/view.ts
+msgid "Keep what's on Hrček"
+msgstr "Obdrži, kar je na Hrčku"
+
+#: src/entrypoints/pending/view.ts
+msgid "Replace with mine"
+msgstr "Zamenjaj z mojim"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček no longer has this address."
+msgstr "Hrček tega naslova nima več."
+
+#: src/entrypoints/pending/view.ts
+msgid "On Hrček"
+msgstr "Na Hrčku"
+
+#: src/entrypoints/pending/view.ts
+msgid "Yours"
+msgstr "Vaše"
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček can't be reached, so what it has can't be shown."
+msgstr "Hrček ni dosegljiv, zato ni mogoče pokazati, kar ima."
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved {when}"
+msgstr "Shranjeno {when}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Saved for {server}, which is not the one in your settings."
+msgstr "Shranjeno za {server}, ki ni strežnik v vaših nastavitvah."
+
+#: src/entrypoints/pending/view.ts
+msgid "Hrček refused it: {reason}"
+msgstr "Hrček ga je zavrnil: {reason}"
+
+#: src/entrypoints/pending/view.ts
+msgid "Nothing is waiting."
+msgstr "Nič ne čaka."
 
 #: src/entrypoints/options/main.ts
 msgid "Automatic ({language})"

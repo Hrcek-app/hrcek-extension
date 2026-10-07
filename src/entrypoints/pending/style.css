@@ -1,0 +1,75 @@
+body {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  font-size: 0.9rem;
+}
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+  flex: 1;
+}
+#count {
+  color: var(--muted);
+  font-weight: 400;
+}
+.result {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+}
+.pending-entry {
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--raised);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.pending-entry h2 {
+  font-size: 1rem;
+  margin: 0 0 0.2rem;
+}
+.address,
+.saved-at,
+.tags {
+  margin: 0.1rem 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.picture {
+  max-height: 6rem;
+  max-width: 100%;
+  border-radius: 0.3rem;
+  margin-top: 0.4rem;
+}
+.trouble {
+  color: var(--danger);
+}
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0.6rem 0;
+}
+.compare h3 {
+  font-size: 0.8rem;
+  margin: 0 0 0.3rem;
+  color: var(--muted);
+}
+.actions,
+.delete-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.empty {
+  color: var(--muted);
+}
