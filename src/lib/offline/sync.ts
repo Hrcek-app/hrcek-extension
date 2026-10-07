@@ -58,6 +58,15 @@ export async function sendQueued(client: HrcekClient, item: Sendable): Promise<S
 }
 
 /**
+ * Whether "Replace with mine" may send this copy now: only one Hrček
+ * already holds, and only to the server it was saved for. The waiting
+ * page may be stale about either.
+ */
+export function canReplace(entry: QueuedEntry, serverUrl: string): boolean {
+  return entry.server === serverUrl && entry.state.kind === 'held';
+}
+
+/**
  * Looks before writing, entry by entry, oldest first. Hrček holding the
  * address already is not this routine's to settle: the entry is held for
  * a person. Only waiting entries meant for `server` are touched, and
