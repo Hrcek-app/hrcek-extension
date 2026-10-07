@@ -227,6 +227,10 @@ msgid "Hrček can't be reached."
 msgstr "Hrček can't be reached."
 
 #: src/entrypoints/pending/view.ts
+msgid "Hrček could not be asked about the waiting entries: something went wrong on its side."
+msgstr "Hrček could not be asked about the waiting entries: something went wrong on its side."
+
+#: src/entrypoints/pending/view.ts
 msgid "{count, plural, one {# entry saved.} other {# entries saved.}}"
 msgstr "{count, plural, one {# entry saved.} other {# entries saved.}}"
 
