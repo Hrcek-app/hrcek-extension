@@ -1,5 +1,6 @@
 import type { HrcekClient, SaveResult } from './api/client';
 import { HrcekApiError } from './api/errors';
+import type { PictureTrouble } from './picture';
 import type { EntryOut } from './api/types';
 
 export interface SaveRequest {
@@ -36,11 +37,12 @@ export async function loadExisting(
 
 export interface SaveOutcome extends SaveResult {
   /**
-   * The server's account of why the picture did not come, when the entry
-   * only saved because `image_url` was dropped. Null when nothing was
-   * dropped — including when no picture was offered at all.
+   * Why the picture did not come, when the entry only saved because
+   * `image_url` was dropped. Null when nothing was dropped — including
+   * when no picture was offered at all. Shaped like `attachPicture`'s
+   * answer so the caller renders both the same way.
    */
-  pictureTrouble: string | null;
+  pictureTrouble: PictureTrouble | null;
 }
 
 /**
@@ -83,6 +85,9 @@ export async function submitSave(
     ) {
       throw error;
     }
-    return { ...(await post(undefined)), pictureTrouble: error.message };
+    return {
+      ...(await post(undefined)),
+      pictureTrouble: { kind: 'refused', message: error.message },
+    };
   }
 }

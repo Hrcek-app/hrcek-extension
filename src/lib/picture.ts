@@ -43,15 +43,28 @@ function filenameFor(url: string): string {
   }
 }
 
-function messageFor(error: unknown, fallback: string): string {
-  // HrcekApiError carries the server's translated, person-facing message;
-  // HrcekNetworkError is authored deliberately by this client. Anything
-  // else is a raw runtime message — developer-facing, untranslated, and
-  // sometimes actively unhelpful — so it gets the safe fallback instead.
-  if (error instanceof HrcekApiError || error instanceof HrcekNetworkError) {
-    return error.message;
-  }
-  return fallback;
+/**
+ * Why a picture did not attach, said as a shape rather than as words.
+ * The caller renders it: this message ends up inside a sentence that has
+ * already been translated, and nothing in `lib/` knows the language.
+ */
+export type PictureTrouble =
+  /** The server refused and said why, in the reader's own language. */
+  | { kind: 'refused'; message: string }
+  /** The server could not be reached at all. */
+  | { kind: 'unreachable' }
+  /** Anything else: a raw runtime error, nothing worth quoting. */
+  | { kind: 'unknown' };
+
+function troubleFor(error: unknown): PictureTrouble {
+  // The server's message is translated and made for people — pass it on.
+  if (error instanceof HrcekApiError) return { kind: 'refused', message: error.message };
+  // This one the client wrote, in English. Naming the shape instead lets
+  // the caller say it in the language the rest of the popup is speaking.
+  if (error instanceof HrcekNetworkError) return { kind: 'unreachable' };
+  // A raw runtime message ("Failed to fetch", a bug's TypeError) is
+  // developer-facing and untranslated. Never show one.
+  return { kind: 'unknown' };
 }
 
 /**
@@ -60,22 +73,15 @@ function messageFor(error: unknown, fallback: string): string {
  * left: uploading bytes when there are any, and deleting a picture that
  * was dropped — a POST cannot remove one.
  *
- * Answers a message when the picture failed, and null when it did not.
- * A picture never fails the entry: the entry is already saved by the
- * time this runs.
- *
- * `fallback` is what to say when the failure carries no message worth
- * showing. It is handed in rather than written here, because this
- * message ends up inside a sentence the caller has already translated —
- * and nothing in `lib/` knows which language that is.
+ * Answers why the picture failed, and null when it did not. A picture
+ * never fails the entry: the entry is already saved by the time this runs.
  */
 export async function attachPicture(
   client: HrcekClient,
   entry: EntryOut,
   choice: PictureChoice,
   bytes: Blob | null,
-  fallback: string,
-): Promise<string | null> {
+): Promise<PictureTrouble | null> {
   try {
     if (choice.kind === 'unchanged') return null;
     if (choice.kind === 'none') {
@@ -89,6 +95,6 @@ export async function attachPicture(
     }
     return null;
   } catch (error) {
-    return messageFor(error, fallback);
+    return troubleFor(error);
   }
 }
