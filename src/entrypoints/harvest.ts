@@ -40,17 +40,61 @@ function collect(): RawCandidate[] {
   }
 
   for (const image of document.images) {
+    const lazy = showsPlaceholder(image) ? absolute(lazySource(image)) : null;
     // currentSrc, so srcset and <picture> give what is actually shown.
-    const url = absolute(image.currentSrc || image.src);
+    const url = lazy ?? absolute(image.currentSrc || image.src);
     if (url === null) continue;
     // naturalWidth is 0 for an image that has not loaded — a lazy one
-    // below the fold — so the rendered box stands in.
-    const width = image.naturalWidth || image.width;
-    const height = image.naturalHeight || image.height;
+    // below the fold — and a placeholder's size is not the picture's, so
+    // the rendered box stands in.
+    const width = (lazy === null && image.naturalWidth) || image.width;
+    const height = (lazy === null && image.naturalHeight) || image.height;
     found.push({ url, width, height, fromHead: false });
   }
 
   return found;
+}
+
+/**
+ * Whether a lazy loader may still be holding the real picture back:
+ * nothing shown yet, an inline stand-in, or a blank pixel.
+ */
+function showsPlaceholder(image: HTMLImageElement): boolean {
+  const shown = image.currentSrc || image.src;
+  return (
+    shown === '' ||
+    shown.startsWith('data:') ||
+    (image.naturalWidth <= 1 && image.naturalHeight <= 1)
+  );
+}
+
+// The attributes the common lazy loaders keep the real address in.
+const LAZY_SOURCES = ['data-src', 'data-lazy-src', 'data-original'];
+const LAZY_SOURCE_SETS = ['data-srcset', 'data-lazy-srcset'];
+
+function lazySource(image: HTMLImageElement): string | null {
+  for (const name of LAZY_SOURCES) {
+    const value = image.getAttribute(name);
+    if (value !== null && value.trim().length > 0) return value;
+  }
+  for (const name of LAZY_SOURCE_SETS) {
+    const value = image.getAttribute(name);
+    if (value !== null) return largest(value);
+  }
+  return null;
+}
+
+/** The largest picture a srcset offers, by its w or x descriptor. */
+function largest(srcset: string): string | null {
+  let best: { url: string; size: number } | null = null;
+  // Split only at a comma followed by space: an address may hold a comma.
+  for (const entry of srcset.split(/,\s+/)) {
+    const [url, descriptor = '1x'] = entry.trim().split(/\s+/);
+    if (url === undefined || url.length === 0) continue;
+    const size = Number.parseFloat(descriptor) || 1;
+    if (best === null || size > best.size) best = { url, size };
+  }
+  return best?.url ?? null;
 }
 
 export default defineUnlistedScript(() => {
