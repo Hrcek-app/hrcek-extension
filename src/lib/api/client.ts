@@ -129,9 +129,9 @@ export class HrcekClient {
    */
   async fetchImage(path: string): Promise<Blob> {
     // A refusal comes back as the JSON envelope even here, so both types
-    // are acceptable.
+    // are acceptable. AVIF must be named to be sent; `image/*` gets WebP.
     const response = await this.request('GET', path, undefined, {
-      accept: 'image/*, application/json',
+      accept: 'image/avif, image/*, application/json',
     });
     // A server from before this address took tokens redirects to its
     // sign-in page, which fetch follows to a 200 of HTML.

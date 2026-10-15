@@ -217,6 +217,19 @@ describe('HrcekClient', () => {
     expect(bytes.size).toBe(3);
   });
 
+  it('fetchImage() asks for AVIF, which the server sends only when named', async () => {
+    server.use(
+      http.get(`${BASE}/entries/1/image/`, ({ request }) => {
+        expect(request.headers.get('Accept')).toContain('image/avif');
+        return HttpResponse.arrayBuffer(new Uint8Array([1]).buffer, {
+          headers: { 'Content-Type': 'image/avif' },
+        });
+      }),
+    );
+
+    expect((await client().fetchImage('/entries/1/image/')).type).toBe('image/avif');
+  });
+
   it('fetchImage() refuses an answer that is not a picture', async () => {
     // A server from before the address took tokens redirects to its
     // sign-in page, and fetch follows: a 200 of HTML, which an <img>
