@@ -1,4 +1,5 @@
 import { i18n } from '@lingui/core';
+import { escapeAttribute, setMarkup } from '../../lib/markup';
 import { addTag, normalizeTag, removeTag, suggestionsFor } from '../../lib/tags';
 
 export interface ChipOptions {
@@ -15,12 +16,6 @@ export interface ChipInput {
 /** As long as a lookup can take before typing starts to feel watched. */
 const SUGGEST_DELAY_MS = 200;
 
-function escapeAttribute(value: string): string {
-  const node = document.createElement('span');
-  node.textContent = value;
-  return node.innerHTML.replaceAll('"', '&quot;');
-}
-
 export function createChipInput(host: HTMLElement, options: ChipOptions): ChipInput {
   let tags = [...options.tags];
   let suggestions: string[] = [];
@@ -30,10 +25,13 @@ export function createChipInput(host: HTMLElement, options: ChipOptions): ChipIn
   let generation = 0;
 
   host.className = 'chips-host';
-  host.innerHTML = `
+  setMarkup(
+    host,
+    `
     <div class="chips"><input class="chip-input" placeholder="${escapeAttribute(i18n._('Add a tag'))}" autocomplete="off" /></div>
     <div class="suggestions" hidden></div>
-  `;
+  `,
+  );
   const box = host.querySelector<HTMLDivElement>('.chips')!;
   const input = host.querySelector<HTMLInputElement>('.chip-input')!;
   const menu = host.querySelector<HTMLDivElement>('.suggestions')!;
@@ -59,7 +57,7 @@ export function createChipInput(host: HTMLElement, options: ChipOptions): ChipIn
   }
 
   function renderSuggestions(): void {
-    menu.innerHTML = '';
+    menu.replaceChildren();
     menu.hidden = suggestions.length === 0;
     suggestions.forEach((name, index) => {
       const row = document.createElement('div');

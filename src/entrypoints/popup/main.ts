@@ -4,6 +4,7 @@ import { HrcekClient } from '../../lib/api/client';
 import { clientFromSettings } from '../../lib/client-factory';
 import { i18n } from '@lingui/core';
 import { activateLocale } from '../../lib/i18n';
+import { escapeAttribute, escapeText, setMarkup } from '../../lib/markup';
 import { harvestCandidates } from '../../lib/page/harvest-client';
 import { showToast } from '../../lib/page/toast-client';
 import { attachPicture, fetchPictureBytes, type PictureTrouble } from '../../lib/picture';
@@ -317,16 +318,6 @@ function fieldControl(input: FieldInput): string {
   return `<input id="${id}" data-field="${escapeAttribute(input.name)}"${mode} value="${escapeAttribute(input.value)}" />`;
 }
 
-function escapeText(value: string): string {
-  const node = document.createElement('span');
-  node.textContent = value;
-  return node.innerHTML;
-}
-
-function escapeAttribute(value: string): string {
-  return escapeText(value).replaceAll('"', '&quot;');
-}
-
 function fieldsMarkup(inputs: FieldInput[]): string {
   if (inputs.length === 0) return '';
   const rows = inputs
@@ -342,28 +333,34 @@ function fieldsMarkup(inputs: FieldInput[]): string {
 }
 
 function renderUnconfigured(): void {
-  app.innerHTML = `
+  setMarkup(
+    app,
+    `
     <div class="hrcek-header">
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
     <p>${escapeText(i18n._('Hrček is not configured yet.'))}</p>
     <button id="open-options">${escapeText(i18n._('Open settings'))}</button>
-  `;
+  `,
+  );
   document
     .querySelector<HTMLButtonElement>('#open-options')!
     .addEventListener('click', () => browser.runtime.openOptionsPage());
 }
 
 function renderUnauthorized(): void {
-  app.innerHTML = `
+  setMarkup(
+    app,
+    `
     <div class="hrcek-header">
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
     </div>
     <p>${escapeText(i18n._('Your Hrček no longer accepts this token. Make a new one in settings.'))}</p>
     <button id="open-options">${escapeText(i18n._('Open settings'))}</button>
-  `;
+  `,
+  );
   document
     .querySelector<HTMLButtonElement>('#open-options')!
     .addEventListener('click', () => browser.runtime.openOptionsPage());
@@ -371,7 +368,9 @@ function renderUnauthorized(): void {
 
 function renderForm(form: FormState, existing: boolean, keepsPicture = existing): void {
   renderedFields = form.fields;
-  app.innerHTML = `
+  setMarkup(
+    app,
+    `
     <div class="hrcek-header">
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
@@ -388,7 +387,8 @@ function renderForm(form: FormState, existing: boolean, keepsPicture = existing)
       <button type="submit" id="save">${escapeText(existing ? i18n._('Update') : i18n._('Save'))}</button>
       <p id="status" data-kind="info"></p>
     </form>
-  `;
+  `,
+  );
   const address = document.querySelector<HTMLSpanElement>('#address')!;
   address.textContent = form.url;
   address.title = form.url;
