@@ -217,6 +217,25 @@ describe('HrcekClient', () => {
     expect(bytes.size).toBe(3);
   });
 
+  it('fetchImage() refuses an answer that is not a picture', async () => {
+    // A server from before the address took tokens redirects to its
+    // sign-in page, and fetch follows: a 200 of HTML, which an <img>
+    // would show as a broken picture.
+    server.use(
+      http.get(
+        `${BASE}/entries/1/image/`,
+        () =>
+          new HttpResponse('<html>Sign in</html>', {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          }),
+      ),
+    );
+
+    await expect(client().fetchImage('/entries/1/image/')).rejects.toMatchObject({
+      code: 'HRC-CLIENT-NOT-A-PICTURE',
+    });
+  });
+
   it('fetchImage() reports a refusal like every other call', async () => {
     server.use(
       http.get(`${BASE}/entries/9/image/`, () =>

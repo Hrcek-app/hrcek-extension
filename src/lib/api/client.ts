@@ -1,4 +1,4 @@
-import { errorFromResponse, HrcekNetworkError } from './errors';
+import { errorFromResponse, HrcekApiError, HrcekNetworkError } from './errors';
 import type {
   EntryIn,
   EntryLookupIn,
@@ -133,6 +133,15 @@ export class HrcekClient {
     const response = await this.request('GET', path, undefined, {
       accept: 'image/*, application/json',
     });
+    // A server from before this address took tokens redirects to its
+    // sign-in page, which fetch follows to a 200 of HTML.
+    if (!(response.headers.get('Content-Type') ?? '').startsWith('image/')) {
+      throw new HrcekApiError(
+        response.status,
+        'HRC-CLIENT-NOT-A-PICTURE',
+        `The server answered ${path} with something other than a picture.`,
+      );
+    }
     return response.blob();
   }
 
