@@ -1,6 +1,8 @@
 # Hrček extension
 
-Browser extension for saving links to a [Hrček](../hrcek) server.
+Browser extension for saving the page you are on to
+[Hrček](https://github.com/Hrcek-app/hrcek), a simple self-hosted
+bookmark manager with wish lists.
 Firefox first; Chrome is a verified build target too, and Safari
 builds from the same codebase. The popup and options page follow the
 browser's language automatically; a language can also be chosen by
