@@ -43,6 +43,14 @@ Removing the extension deletes them all.
 **Never kept:** your password. It is used once, to ask Hrček for a
 token, and is written nowhere.
 
+**Declared to Firefox:** the manifest's `data_collection_permissions`
+names what the above amounts to in Firefox's own categories, and
+Firefox asks for consent to it at install: browsing activity (the
+addresses saved or looked up), website content (titles and pictures),
+and authentication information (the password, sent once to your Hrček
+to make a token). All three go only to the Hrček you configured, and
+pictures are fetched from the page's own host.
+
 **Never collected:** page contents, form data, or anything beyond what
 is described above. The browser does hand the extension each tab's
 address as you browse — that is what the `tabs` permission is for — but

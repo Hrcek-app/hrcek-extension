@@ -62,7 +62,24 @@ export default defineConfig({
             // Final AMO id: valid and unique, and fine to ship as-is.
             // Can still change right up to the first AMO upload — after
             // that, never.
-            gecko: { id: 'hrcek@markos.gaivo.net' },
+            gecko: {
+              id: 'hrcek@markos.gaivo.net',
+              // Firefox's built-in data consent, shown at install and
+              // required by AMO for every new listing. Mozilla counts
+              // anything leaving the browser — a server the person chose
+              // included. Keep it in step with docs/store/privacy.md:
+              // addresses (saving, and the saved-state lookup), page
+              // titles and pictures, and the password sent once to mint
+              // a token.
+              data_collection_permissions: {
+                required: ['browsingActivity', 'websiteContent', 'authenticationInfo'],
+              },
+              // The first release that shows that consent prompt. An
+              // older Firefox would install without asking.
+              strict_min_version: '140.0',
+            },
+            // Firefox for Android shows the same prompt from 142 on.
+            gecko_android: { strict_min_version: '142.0' },
           },
         }
       : {}),
