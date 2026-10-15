@@ -4,6 +4,7 @@ import { anonymousClient, clientFromSettings } from '../../lib/client-factory';
 import { i18n } from '@lingui/core';
 import { availableLocales, localeFor } from '../../lib/i18n';
 import { LOCALE_NAMES } from '../../lib/i18n/catalogues';
+import { escapeText, setMarkup } from '../../lib/markup';
 import { loadSettings, normalizeServerUrl, saveSettings } from '../../lib/settings';
 import { tokenName } from '../../lib/token-name';
 import './style.css';
@@ -38,12 +39,6 @@ let showSavedInput: HTMLInputElement;
  */
 let tokenAlreadyHeld = false;
 
-function escapeText(value: string): string {
-  const node = document.createElement('span');
-  node.textContent = value;
-  return node.innerHTML;
-}
-
 function languageOptions(): string {
   // Automatic first, naming what it resolved to. Then every language in
   // its own words — the only naming that helps somebody who has landed
@@ -63,7 +58,9 @@ function languageOptions(): string {
 }
 
 function render(): void {
-  app.innerHTML = `
+  setMarkup(
+    app,
+    `
     <div class="hrcek-header">
       <img src="/icon/32.png" alt="" />
       <span class="name">Hrček</span>
@@ -105,7 +102,8 @@ function render(): void {
       </div>
       <button type="button" id="create">${escapeText(i18n._('Create token'))}</button>
     </details>
-  `;
+  `,
+  );
   wire();
 }
 
