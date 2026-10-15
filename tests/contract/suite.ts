@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { HrcekClient } from '../../src/lib/api/client';
 import type { HrcekApiError } from '../../src/lib/api/errors';
 import { loadExisting, submitSave } from '../../src/lib/save';
-// A constant, not behaviour: the fake refuses this address, and a real
+// Constants, not behaviour: the fake refuses this address, and a real
 // Hrček cannot resolve it either, so both answer HRC-IMAGE-*.
-import { UNFETCHABLE_IMAGE_URL } from '../fake-hrcek/server';
+import { PIXEL_PNG, UNFETCHABLE_IMAGE_URL } from '../fake-hrcek/server';
 
 export interface ContractTarget {
   baseUrl: string;
@@ -178,6 +178,21 @@ export function runContractSuite(
       expect(outcome.entry.tags).toEqual(['watches']);
       expect(outcome.entry.image).toBeNull();
       expect((await loadExisting(client(), url))?.title).toBe('A watch');
+    });
+
+    it("serves an entry's picture to the token that owns it", async () => {
+      // image.url sits outside /api/, and needs Hrcek-app/hrcek#96 on the
+      // real server: before it, the token was sent to the sign-in page.
+      const { entry } = await client().saveEntry({ url: testUrl('picture-served') });
+      const pictured = await client().uploadImage(
+        entry.id,
+        new Blob([PIXEL_PNG], { type: 'image/png' }),
+        'pixel.png',
+      );
+
+      const bytes = await client().fetchImage(pictured.image!.url);
+      expect(bytes.type).toMatch(/^image\//);
+      expect(bytes.size).toBeGreaterThan(0);
     });
 
     it('describes the fields an entry may carry', async () => {

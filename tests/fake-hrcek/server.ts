@@ -28,7 +28,7 @@ export const UNFETCHABLE_IMAGE_HOST = 'unfetchable.example.com';
 export const UNFETCHABLE_IMAGE_URL = `https://${UNFETCHABLE_IMAGE_HOST}/picture.jpg`;
 
 /** One transparent pixel, which is all any of this needs to be a picture. */
-const PIXEL_PNG = Buffer.from(
+export const PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
 );
